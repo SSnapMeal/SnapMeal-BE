@@ -10,4 +10,11 @@ import java.util.List;
 
 public interface MealsRepository extends JpaRepository<Meals, Long> {
     List<Meals> findAllByUser(User user);
+
+    boolean existsByUserAndMealDateBetweenAndMenuContainingIgnoreCase(
+            snapmeal.snapmeal.domain.User user,
+            java.time.LocalDateTime startInclusive,
+            java.time.LocalDateTime endInclusive,
+            String targetKeyword
+    );
 }

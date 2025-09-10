@@ -47,4 +47,7 @@ public class Meals extends BaseEntity {
         this.memo = memo;
         this.location = location;
     }
+
+    @Column(name = "menu")
+    private String menu;
 }
