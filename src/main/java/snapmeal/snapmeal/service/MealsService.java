@@ -2,6 +2,8 @@ package snapmeal.snapmeal.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import snapmeal.snapmeal.converter.MealsConverter;
 import snapmeal.snapmeal.domain.Images;
 import snapmeal.snapmeal.domain.Meals;
 import snapmeal.snapmeal.domain.NutritionAnalysis;
@@ -10,8 +12,11 @@ import snapmeal.snapmeal.global.util.AuthService;
 import snapmeal.snapmeal.repository.MealsRepository;
 import snapmeal.snapmeal.repository.NutritionAnalysisRepository;
 import snapmeal.snapmeal.web.dto.MealsRequestDto;
+import snapmeal.snapmeal.web.dto.MealsResponseDto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -21,34 +26,47 @@ public class MealsService {
     private final MealsRepository mealsRepository;
     private final NutritionAnalysisRepository nutritionAnalysisRepository;
     private final AuthService authService;
+    private final MealsConverter mealsConverter;
 
     // 식단 저장
-    public Meals createMeal(MealsRequestDto request) {
+    @Transactional
+    public MealsResponseDto createMeal(MealsRequestDto request) {
         User user = authService.getCurrentUser();
 
         NutritionAnalysis nutrition = nutritionAnalysisRepository.findById(request.getNutritionId())
                 .orElseThrow(() -> new IllegalArgumentException("영양 분석 정보가 없습니다."));
 
-        Images image = nutrition.getImage(); // nutrition에 이미 연결되어 있음
+        Images image = nutrition.getImage();
 
         Meals meal = Meals.builder()
-                .mealType(request.getMealType())  // enum 사용
+                .mealType(request.getMealType())
                 .memo(request.getMemo())
                 .location(request.getLocation())
-                .mealDate(LocalDateTime.now())  // 또는 request에서 받기
+                .mealDate(LocalDateTime.now())
                 .nutrition(nutrition)
                 .image(image)
                 .user(user)
                 .build();
 
-        return mealsRepository.save(meal);
+        Meals saved = mealsRepository.save(meal);
+
+        return mealsConverter.toDto(saved);
     }
 
-    // 사용자의 모든 식단 조회
-    public List<Meals> getAllMeals() {
+    // 사용자의 날짜별 식단 조회 (DTO 반환)
+    public List<MealsResponseDto> getMealsByDate(LocalDate targetDate) {
         User user = authService.getCurrentUser();
-        return mealsRepository.findAllByUser(user);
+
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        List<Meals> meals = mealsRepository.findAllByUserAndCreatedAtBetween(user, startOfDay, endOfDay);
+
+        return mealsConverter.toDtoList(meals);
     }
+
+
 
     // 사용자의 식단 개별 조회
     public Meals getMeal(Long mealId) {

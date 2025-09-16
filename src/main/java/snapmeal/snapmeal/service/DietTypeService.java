@@ -4,7 +4,7 @@ package snapmeal.snapmeal.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import snapmeal.snapmeal.converter.OpenAiConverter;
+import snapmeal.snapmeal.global.util.OpenAiConverter;
 import snapmeal.snapmeal.global.OpenAiClient;
 import snapmeal.snapmeal.web.dto.DietTypeRequestDto;
 import snapmeal.snapmeal.web.dto.DietTypeResponseDto;

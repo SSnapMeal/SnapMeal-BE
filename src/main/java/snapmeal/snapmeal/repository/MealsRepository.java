@@ -6,6 +6,7 @@ import snapmeal.snapmeal.domain.Meals;
 import snapmeal.snapmeal.domain.User;
 import snapmeal.snapmeal.domain.enums.MealType;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface MealsRepository extends JpaRepository<Meals, Long> {
@@ -17,4 +18,6 @@ public interface MealsRepository extends JpaRepository<Meals, Long> {
             java.time.LocalDateTime endInclusive,
             String targetKeyword
     );
+    List<Meals> findAllByUserAndCreatedAtBetween(User user, LocalDateTime start, LocalDateTime end);
+
 }
