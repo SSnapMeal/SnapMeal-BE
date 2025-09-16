@@ -11,7 +11,7 @@ import snapmeal.snapmeal.global.OpenAiClient;
 import snapmeal.snapmeal.repository.ImageRepository;
 import snapmeal.snapmeal.repository.NutritionAnalysisRepository;
 import snapmeal.snapmeal.web.dto.NutritionRequestDto;
-import snapmeal.snapmeal.converter.OpenAiConverter;
+import snapmeal.snapmeal.global.util.OpenAiConverter;
 import snapmeal.snapmeal.global.util.AuthService;
 
 @Service

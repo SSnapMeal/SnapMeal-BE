@@ -29,9 +29,11 @@ public enum ErrorCode implements BaseErrorCode {
     NOT_AUTHORIZED_TO_CHANGE_REQUEST(HttpStatus.FORBIDDEN, "MATE003", "요청을 변경할 권한이 없습니다."),
     UNAUTHORIZED_ACTION(HttpStatus.FORBIDDEN, "MATE002", "해당 요청에 대한 권한이 없습니다."),
     ALREADY_PROCESSED_REQUEST(HttpStatus.BAD_REQUEST, "MATE003", "이미 처리된 친구 요청입니다."),
-    FRIEND_NOT_FOUND(HttpStatus.NOT_FOUND, "MATE003", "해당 친구 요청이 존재하지 않습니다.");
+    FRIEND_NOT_FOUND(HttpStatus.NOT_FOUND, "MATE003", "해당 친구 요청이 존재하지 않습니다."),
 
-
+    //weekly report 관련 응답
+    REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT001", "주간 리포트를 찾을 수 없습니다."),
+    AI_RESPONSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI001", "AI 응답 처리 중 오류가 발생했습니다.");
     private final HttpStatus httpStatus;
     private final String errorCode;
     private final String errorMessage;

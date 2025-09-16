@@ -1,4 +1,4 @@
-package snapmeal.snapmeal.converter;
+package snapmeal.snapmeal.global.util;
 
 import java.util.List;
 
