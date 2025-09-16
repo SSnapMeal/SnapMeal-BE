@@ -1,32 +1,15 @@
-package snapmeal.snapmeal.web.dto;
+package snapmeal.snapmeal.converter;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
+import org.springframework.stereotype.Component;
 import snapmeal.snapmeal.domain.Meals;
-import snapmeal.snapmeal.domain.enums.MealType;
+import snapmeal.snapmeal.web.dto.MealsResponseDto;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
-@Data
-@Getter
-@Builder
-public class MealsResponseDto {
-    private Long mealId;
-    private MealType mealType;
-    private String memo;
-    private String location;
-    private LocalDateTime mealDate;
-    private double calories;
-    private double protein;
-    private double carbs;
-    private double sugar;
-    private double fat;
+@Component
+public class MealsConverter {
 
-    private String className;
-    private String imageUrl;
-
-    public static MealsResponseDto from(Meals meal) {
+    public MealsResponseDto toDto(Meals meal) {
         return MealsResponseDto.builder()
                 .mealId(meal.getMealId())
                 .mealType(meal.getMealType())
@@ -41,5 +24,11 @@ public class MealsResponseDto {
                 .className(meal.getImage().getClassName())
                 .imageUrl(meal.getImage().getImageUrl())
                 .build();
+    }
+
+    public List<MealsResponseDto> toDtoList(List<Meals> meals) {
+        return meals.stream()
+                .map(this::toDto)
+                .toList();
     }
 }
