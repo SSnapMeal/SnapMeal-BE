@@ -28,5 +28,7 @@ public class NutritionRequestDto {
         private double carbs;
         private double sugar;
         private double fat;
+
+        private Long nutritionId;
     }
 }

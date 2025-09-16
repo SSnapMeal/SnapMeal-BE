@@ -1,4 +1,4 @@
-package snapmeal.snapmeal.util;
+package snapmeal.snapmeal.global.util;
 
 import org.springframework.core.io.InputStreamResource;
 

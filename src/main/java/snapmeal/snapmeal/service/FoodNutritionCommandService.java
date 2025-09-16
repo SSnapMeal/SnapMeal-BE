@@ -47,11 +47,12 @@ public class FoodNutritionCommandService {
                     .user(currentUser)
                     .build();
 
-            nutritionAnalysisRepository.save(analysis);
+            NutritionAnalysis saved = nutritionAnalysisRepository.save(analysis);
+            result.setNutritionId(saved.getId());
             return result;
 
         } catch (Exception e) {
-            return new NutritionRequestDto.TotalNutritionRequestDto(0, 0, 0, 0, 0);
+            return new NutritionRequestDto.TotalNutritionRequestDto(0, 0, 0, 0, 0, 0L);
         }
     }
 }

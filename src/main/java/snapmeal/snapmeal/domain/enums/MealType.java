@@ -2,7 +2,11 @@ package snapmeal.snapmeal.domain.enums;
 
 public enum MealType {
     BREAKFAST,
+    BRUNCH,
     LUNCH,
-    DINNER
+    LINNER,
+    DINNER,
+    MIDNIGHTSNACK,
+    SNACK
 }
 

@@ -20,7 +20,7 @@ public class NutritionConverter {
             totalFat += food.optDouble("fat", 0);
         }
 
-        return new NutritionRequestDto.TotalNutritionRequestDto(totalCalories, totalProtein, totalCarbs, totalSugar, totalFat);
+        return new NutritionRequestDto.TotalNutritionRequestDto(totalCalories, totalProtein, totalCarbs, totalSugar, totalFat, null);
     }
 
 }

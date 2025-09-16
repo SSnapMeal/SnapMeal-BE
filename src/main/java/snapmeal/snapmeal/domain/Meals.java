@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import org.w3c.dom.Text;
 import snapmeal.snapmeal.domain.common.BaseEntity;
 import snapmeal.snapmeal.domain.enums.MealType;
+
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor
@@ -19,19 +22,32 @@ public class Meals extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mealId;
 
-    @Lob
-    @Column(name = "image_url")
-    private String imageUrl;
-
-
     @Enumerated(EnumType.STRING)
     @Column(name = "meal_type")
     private MealType mealType;
+
+    private String memo;
+    private String location;
+    private LocalDateTime mealDate;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "image_id")
+    private Images image;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nutrition_id")
+    private NutritionAnalysis nutrition;
 
+    public void update(MealType mealType, String memo, String location) {
+        this.mealType = mealType;
+        this.memo = memo;
+        this.location = location;
+    }
 
+    @Column(name = "menu")
+    private String menu;
 }
