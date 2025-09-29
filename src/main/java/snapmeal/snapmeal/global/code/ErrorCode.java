@@ -33,7 +33,11 @@ public enum ErrorCode implements BaseErrorCode {
 
     //weekly report 관련 응답
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT001", "주간 리포트를 찾을 수 없습니다."),
-    AI_RESPONSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI001", "AI 응답 처리 중 오류가 발생했습니다.");
+    AI_RESPONSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI001", "AI 응답 처리 중 오류가 발생했습니다."),
+
+    RECOMMENDATION_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "REC5000", "오늘의 추천 생성에 실패했습니다."),
+    NUTRITION_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "NUTRITION4040", "오늘의 영양 데이터가 없습니다.");
+
     private final HttpStatus httpStatus;
     private final String errorCode;
     private final String errorMessage;

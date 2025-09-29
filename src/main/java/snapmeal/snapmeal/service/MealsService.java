@@ -1,6 +1,7 @@
 package snapmeal.snapmeal.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import snapmeal.snapmeal.converter.MealsConverter;
@@ -19,6 +20,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+
+
 @Service
 @RequiredArgsConstructor
 public class MealsService {
@@ -27,6 +30,10 @@ public class MealsService {
     private final NutritionAnalysisRepository nutritionAnalysisRepository;
     private final AuthService authService;
     private final MealsConverter mealsConverter;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final String RECOMMENDATION_CACHE_PREFIX = "todayRecommendation:";
+    private static final String NUTRITION_CACHE_PREFIX = "todayNutrition:";
 
     // 식단 저장
     @Transactional
@@ -50,6 +57,8 @@ public class MealsService {
 
         Meals saved = mealsRepository.save(meal);
 
+        clearTodayCache(user);
+
         return mealsConverter.toDto(saved);
     }
 
@@ -66,8 +75,6 @@ public class MealsService {
         return mealsConverter.toDtoList(meals);
     }
 
-
-
     // 사용자의 식단 개별 조회
     public Meals getMeal(Long mealId) {
         User user = authService.getCurrentUser();
@@ -82,16 +89,40 @@ public class MealsService {
     }
 
     // 식단 수정
+    @Transactional
     public Meals updateMeal(Long mealId, MealsRequestDto requestDto) {
+        User user = authService.getCurrentUser();
         Meals meal = getMeal(mealId);
 
         meal.update(requestDto.getMealType(), requestDto.getMemo(), requestDto.getLocation());
-        return mealsRepository.save(meal);
+
+        // 오늘 캐시 무효화
+        clearTodayCache(user);
+
+        return meal; // save() 필요 없음 (JPA 영속 상태 → 자동 반영)
     }
 
     // 식단 삭제
+    @Transactional
     public void deleteMeal(Long mealId) {
+        User user = authService.getCurrentUser();
         Meals meal = getMeal(mealId);
+
         mealsRepository.delete(meal);
+
+        //  오늘 캐시 무효화
+        clearTodayCache(user);
+    }
+
+    private void clearTodayCache(User user) {
+        String today = LocalDate.now().toString();
+
+        // 추천 캐시 삭제
+        String recommendationKey = RECOMMENDATION_CACHE_PREFIX + user.getId() + ":" + today;
+        redisTemplate.delete(recommendationKey);
+
+        // 영양 요약 캐시 삭제
+        String nutritionKey = NUTRITION_CACHE_PREFIX + user.getId() + ":" + today;
+        redisTemplate.delete(nutritionKey);
     }
 }

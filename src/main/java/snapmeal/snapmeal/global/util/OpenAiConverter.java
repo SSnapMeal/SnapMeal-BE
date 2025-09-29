@@ -52,6 +52,62 @@ public class OpenAiConverter {
                 """.formatted(String.join(", ", mealNames));
 
     }
+    public static String buildTodayRecommendationPrompt(String gender, int age, int totalCalories) {
+        return """
+        당신은 건강한 식생활과 운동 코치입니다.
+        사용자의 성별은 %s이고 나이는 %d세입니다.
+        오늘 섭취 칼로리는 총 %d kcal입니다.
+
+        1. 운동 추천: 사용자가 지금까지 섭취한 칼로리를 기준으로, 소모 가능한 운동을 2개 제안하세요.
+           (예: "자전거 1시간 = 200kcal" → 600kcal 섭취 시 자전거 3시간 추천)
+
+        2. 음식 추천: 성별과 나이를 고려해 평균 권장 칼로리(recommendedCalories)를 정하세요.
+           그 값에서 오늘 섭취한 칼로리를 뺀 남은 칼로리(remainingCalories)를 계산하세요.
+           남은 칼로리 안에서 섭취하면 좋은 음식을 2개 추천하세요.
+
+        반드시 아래 JSON 형식만 응답하세요:
+
+        {
+          "recommendedCalories": 2200,
+          "remainingCalories": 1600,
+          "exercises": [
+            {
+              "name": "자전거",
+              "calories": 200,
+              "duration": "1시간",
+              "repeat": 3,
+              "category": "유산소",
+              "emoji": "🚴"
+            },
+            {
+              "name": "줄넘기",
+              "calories": 250,
+              "duration": "30분",
+              "repeat": 2,
+              "category": "유산소",
+              "emoji": "🤾"
+            }
+          ],
+          "foods": [
+            {
+              "name": "샐러드",
+              "calories": 302,
+              "benefit": "부족한 영양소 채우기",
+              "emoji": "🥗"
+            },
+            {
+              "name": "고등어 구이",
+              "calories": 410,
+              "benefit": "단백질과 오메가3 보충",
+              "emoji": "🐟"
+            }
+          ]
+        }
+
+        **주의: 설명하지 말고 반드시 위 JSON만 출력하세요.**
+        """.formatted(gender, age, totalCalories);
+    }
+
 
 
 }
