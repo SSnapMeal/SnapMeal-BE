@@ -10,11 +10,14 @@ import snapmeal.snapmeal.web.dto.TodayNutritionResponseDto;
 import java.time.LocalDate;
 @Component
 public class NutritionConverter {
-    public static NutritionRequestDto.TotalNutritionRequestDto fromOpenAiJson(String jsonResponse){
+
+    // 🔹 OpenAI JSON 응답 → TotalNutritionRequestDto 변환
+    public static NutritionRequestDto.TotalNutritionRequestDto fromOpenAiJson(String jsonResponse) {
         JSONArray array = new JSONArray(jsonResponse);
 
         int totalCalories = 0;
-        double totalProtein = 0,  totalCarbs = 0, totalSugar = 0, totalFat = 0;
+        double totalProtein = 0, totalCarbs = 0, totalSugar = 0, totalFat = 0;
+
         for (int i = 0; i < array.length(); i++) {
             JSONObject food = array.getJSONObject(i);
             totalCalories += food.optInt("calories", 0);
@@ -24,24 +27,10 @@ public class NutritionConverter {
             totalFat += food.optDouble("fat", 0);
         }
 
-        return new NutritionRequestDto.TotalNutritionRequestDto(totalCalories, totalProtein, totalCarbs, totalSugar, totalFat, null);
+        return new NutritionRequestDto.TotalNutritionRequestDto(
+                totalCalories, totalProtein, totalCarbs, totalSugar, totalFat, null
+        );
     }
-    public TodayNutritionResponseDto toSummaryDto(
-            LocalDate date,
-            int totalCalories,
-            double totalProtein,
-            double totalCarbs,
-            double totalSugar,
-            double totalFat
-    ) {
-        return TodayNutritionResponseDto.builder()
-                .date(date)
-                .totalCalories(totalCalories)
-                .totalProtein(totalProtein)
-                .totalCarbs(totalCarbs)
-                .totalSugar(totalSugar)
-                .totalFat(totalFat)
-                .build();
-    }
-
 }
+
+

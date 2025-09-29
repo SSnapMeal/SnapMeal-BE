@@ -1,82 +1,152 @@
 package snapmeal.snapmeal.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import snapmeal.snapmeal.domain.NutritionAnalysis;
 import snapmeal.snapmeal.domain.User;
 import snapmeal.snapmeal.global.OpenAiClient;
+import snapmeal.snapmeal.global.code.ErrorCode;
+import snapmeal.snapmeal.global.handler.RecommendationHandler;
 import snapmeal.snapmeal.global.util.AuthService;
+import snapmeal.snapmeal.global.util.OpenAiConverter;
 import snapmeal.snapmeal.repository.NutritionAnalysisRepository;
 import snapmeal.snapmeal.repository.UserRepository;
 import snapmeal.snapmeal.web.dto.TodayRecommendationResponseDto;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TodayRecommendationService {
 
     private final NutritionAnalysisRepository nutritionAnalysisRepository;
     private final OpenAiClient openAiClient;
-    private final UserRepository userRepository;
     private final AuthService authService;
+    private final RedisTemplate<String, TodayRecommendationResponseDto> recommendationRedisTemplate;
 
-    public TodayRecommendationResponseDto generateRecommendation() throws IOException {
-        // 로그인된 사용자 가져오기
-        User user = authService.getCurrentUser();
 
-        // 오늘 날짜 기준 조회 범위 설정
+    private static final String CACHE_PREFIX = "todayRecommendation:";
+
+    public TodayRecommendationResponseDto generateRecommendation() {
+        try {
+            User user = authService.getCurrentUser();
+            log.info("[TodayRecommendation] 현재 사용자 ID: {}", user.getId());
+
+            String todayKey = CACHE_PREFIX + user.getId() + ":" + LocalDate.now();
+            log.debug("[TodayRecommendation] 캐시 키: {}", todayKey);
+
+            TodayRecommendationResponseDto cached =
+                    recommendationRedisTemplate.opsForValue().get(todayKey);
+            if (cached != null) {
+                log.info("[TodayRecommendation] 캐시에서 결과 반환");
+                return cached;
+            }
+
+            int totalCalories = calculateTodayCalories(user);
+            log.info("[TodayRecommendation] 오늘 섭취 칼로리 합계: {}", totalCalories);
+
+            String prompt = OpenAiConverter.buildTodayRecommendationPrompt(
+                    user.getGender().getDisplayName(),
+                    user.getAge(),
+                    totalCalories
+            );
+            log.debug("[TodayRecommendation] 프롬프트 생성 완료: {}", prompt);
+
+            String aiResponse = openAiClient.requestCompletion(
+                    "당신은 건강한 식생활과 운동 코치입니다.",
+                    prompt
+            );
+            log.debug("[TodayRecommendation] OpenAI 응답: {}", aiResponse);
+
+            String cleanResponse = extractJson(aiResponse);
+            log.debug("[TodayRecommendation] JSON 정제 응답: {}", cleanResponse);
+
+            JSONObject json = new JSONObject(cleanResponse);
+
+            int recommendedCalories = json.optInt("recommendedCalories", 2000);
+            int remainingCalories = Math.max(0, recommendedCalories - totalCalories);
+            log.info("[TodayRecommendation] 권장 칼로리: {}, 남은 칼로리: {}",
+                    recommendedCalories, remainingCalories);
+
+            TodayRecommendationResponseDto dto = TodayRecommendationResponseDto.builder()
+                    .consumedCalories(totalCalories)
+                    .remainingCalories(remainingCalories)
+                    .exercises(parseExercises(json.getJSONArray("exercises")))
+                    .foods(parseFoods(json.getJSONArray("foods")))
+                    .build();
+
+            recommendationRedisTemplate.opsForValue().set(todayKey, dto, Duration.ofDays(1));
+            log.info("[TodayRecommendation] 추천 결과 캐시에 저장 완료");
+
+            return dto;
+
+        } catch (Exception e) {
+            log.error("[TodayRecommendation] 추천 생성 실패: {}", e.getMessage(), e);
+            throw new RecommendationHandler(ErrorCode.RECOMMENDATION_GENERATION_FAILED);
+        }
+    }
+
+    private int calculateTodayCalories(User user) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
 
-        // 오늘의 영양소 분석 데이터 조회
         List<NutritionAnalysis> todayRecords =
                 nutritionAnalysisRepository.findAllByUserAndCreatedAtBetween(user, startOfDay, endOfDay);
 
-        // 총 섭취 칼로리 계산
-        int totalCalories = todayRecords.stream()
+        log.debug("[TodayRecommendation] 오늘 기록 개수: {}", todayRecords.size());
+
+        return todayRecords.stream()
                 .mapToInt(NutritionAnalysis::getCalories)
                 .sum();
-
-        // 프롬프트 구성 (권장 칼로리는 AI가 판단하게)
-        String prompt = String.format("""
-당신은 건강한 식생활과 운동 코치입니다.
-사용자의 성별은 %s이고 나이는 %d세입니다.
-오늘 섭취 칼로리는 총 %d kcal입니다.
-
-다음과 같이 JSON 형식만 응답하세요. 설명 없이 **반드시 아래 형식만 출력하세요**:
-
-{"recommendedCalories": 2200, "exercise": "운동 추천", "food": "음식 추천"}
-
-이 형식을 반드시 지켜주세요. 설명하지 말고 JSON만 응답하세요.
-""", user.getGender(), user.getAge(), totalCalories);
-
-
-        // AI 응답 받기
-        String aiResponse = openAiClient.requestCompletion(
-                "당신은 건강한 식생활과 운동 코치입니다.",
-                prompt
-        );
-
-        // JSON 파싱
-        JSONObject json = new JSONObject(aiResponse);
-
-        int recommendedCalories = json.optInt("recommendedCalories", 2000); // 기본 2000
-        int remainingCalories = Math.max(0, recommendedCalories - totalCalories);
-
-        // DTO 생성 및 반환
-        return new TodayRecommendationResponseDto(
-                totalCalories,
-                remainingCalories,
-                json.optString("exercise"),
-                json.optString("food")
-        );
     }
 
+    private String extractJson(String response) {
+        String trimmed = response.trim();
+        if (trimmed.startsWith("```")) {
+            return trimmed.replaceAll("```(json)?", "").trim();
+        }
+        return trimmed;
+    }
+
+    private List<TodayRecommendationResponseDto.ExerciseRecommendationDto> parseExercises(JSONArray arr) {
+        List<TodayRecommendationResponseDto.ExerciseRecommendationDto> list = new ArrayList<>();
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject obj = arr.getJSONObject(i);
+            list.add(TodayRecommendationResponseDto.ExerciseRecommendationDto.builder()
+                    .name(obj.optString("name"))
+                    .calories(obj.optInt("calories"))
+                    .duration(obj.optString("duration"))
+                    .repeat(obj.optInt("repeat"))
+                    .category(obj.optString("category"))
+                    .emoji(obj.optString("emoji"))
+                    .build());
+        }
+        return list;
+    }
+
+    private List<TodayRecommendationResponseDto.FoodRecommendationDto> parseFoods(JSONArray arr) {
+        List<TodayRecommendationResponseDto.FoodRecommendationDto> list = new ArrayList<>();
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject obj = arr.getJSONObject(i);
+            list.add(TodayRecommendationResponseDto.FoodRecommendationDto.builder()
+                    .name(obj.optString("name"))
+                    .calories(obj.optInt("calories"))
+                    .benefit(obj.optString("benefit"))
+                    .emoji(obj.optString("emoji"))
+                    .build());
+        }
+        return list;
+    }
 
 }
