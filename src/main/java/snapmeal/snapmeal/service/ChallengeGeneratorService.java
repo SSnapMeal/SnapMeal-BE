@@ -27,20 +27,28 @@ public class ChallengeGeneratorService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final List<String> FALLBACK_MENUS = List.of(
-            "아메리카노","라떼","요거트","사과","바나나",
-            "고구마","그릭요거트","샐러드","두부","삶은계란"
+            "간장게장","갈비찜","깍두기","떡꼬치","도토리묵 무침","동그랑땡",
+            "된장찌개","두부김치","두부조림","떡만두국","떡볶이","만두","배추김치","시래기 된장국","식혜",
+            "애호박볶음","약과","약밥","양념게장","어묵볶음","열무국수","열무김치","오징어채볶음","오징어튀김","육개장",
+            "잔치국수","잡채","전복죽","전통 한과","제육볶음","족발","진미채볶음","짜장면","짬뽕","쫄면",
+            "추어탕","치킨","칼국수","콩국수","콩나물국","콩나물무침","콩자반","숙주나물무침","파전","편육","해물찜","호박전"
     );
 
     // 이번 주(weekStart~weekEnd) 챌린지가 이미 있으면 재생성하지 않음
     @Transactional
-    public List<Challenges> generateWeeklyForUser(User user, LocalDate weekStart, LocalDate weekEnd) {
-        boolean already = challengeRepository.existsByUserAndStartDateGreaterThanEqualAndEndDateLessThanEqual(
-                user, weekStart, weekEnd
-        );
-        if (already) {
-            return challengeRepository.findAllByUserAndStartDateGreaterThanEqualAndEndDateLessThanEqual(
+    public List<Challenges> generateWeeklyForUser(User user, LocalDate weekStart, LocalDate weekEnd, boolean force) {
+        if (force) {
+            // ✅ 이번 주 이미 생성된 것들 싹 지우고 다시 만든다
+            challengeRepository.deleteAllByUserAndStartDateGreaterThanEqualAndEndDateLessThanEqual(
                     user, weekStart, weekEnd
             );
+        } else {
+            boolean already = challengeRepository
+                    .existsByUserAndStartDateGreaterThanEqualAndEndDateLessThanEqual(user, weekStart, weekEnd);
+            if (already) {
+                return challengeRepository
+                        .findAllByUserAndStartDateGreaterThanEqualAndEndDateLessThanEqual(user, weekStart, weekEnd);
+            }
         }
 
         List<Challenges> created = fromLLMOrFallback(user, weekStart, weekEnd);
@@ -48,43 +56,68 @@ public class ChallengeGeneratorService {
     }
 
     private List<Challenges> fromLLMOrFallback(User user, LocalDate weekStart, LocalDate weekEnd) {
-        try {
-            String prompt = """
-                너는 '일주일 건강 챌린지' 코치야.
-                사용자에게 줄 '음식 기반 챌린지' 3개를 JSON으로만 응답해.
-                {
-                  "challenges": [
-                    { "title": "커피 마시기", "targetMenu": "커피", "description": "오늘은 아메리카노 한 잔!" },
-                    { "title": "그릭요거트 먹기", "targetMenu": "그릭요거트", "description": "단백질+유산균 보충" },
-                    { "title": "사과 먹기", "targetMenu": "사과", "description": "식이섬유 챙기기" }
-                  ]
-                }
-                - targetMenu는 Meals.menu에 포함 매칭 가능한 키워드여야 함.
-                """;
+        // 오직 FALLBACK_MENUS 안에서만 뽑기
+        List<String> allowed = FALLBACK_MENUS;
+        List<Challenges> list = new ArrayList<>();
 
-            String raw = openAiClient.requestCompletion("당신은 건강 관리 전문가입니다.", prompt);
-            // 코드블록 마커 제거 등 간단 전처리
+        try {
+            String allowedJson = "[\"" + String.join("\",\"", allowed) + "\"]";
+
+            String system = "너는 사용자에게 주간 '음식 기반 챌린지'를 제안하는 코치야. "
+                    + "반드시 내가 준 허용 메뉴 목록 안에서만 선택하고, JSON 외 텍스트는 절대 반환하지 마.";
+
+            String prompt = """
+            아래 allowedMenus 안에서만 정확히 3개의 챌린지를 JSON으로 반환해.
+            스키마:
+            {
+              "challenges": [
+                { "title": "string", "targetMenu": "string", "description": "string" }
+              ]
+            }
+            제약:
+            - allowedMenus 밖 메뉴 사용 금지
+            - 주류 추천 금지
+            - 응답은 JSON 한 덩어리만 (코드블록/주석/설명 금지)
+            - title은 {menu} 먹기 형식을 권장 (회피형이 아니라면)
+            allowedMenus: %s
+            """.formatted(allowedJson);
+
+            String raw = openAiClient.requestCompletion(system, prompt);
             String cleaned = raw.replaceAll("(?s)```json|```", "").trim();
 
             ChallengeAiResponse parsed = objectMapper.readValue(cleaned, ChallengeAiResponse.class);
 
-            List<Challenges> list = new ArrayList<>();
+            // 2차 필터: 허용 메뉴 밖/중복 제거
             if (parsed.getChallenges() != null) {
-                parsed.getChallenges().stream().limit(3).forEach(it ->
-                        list.add(Challenges.builder()
+                var used = new java.util.HashSet<String>();
+                parsed.getChallenges().stream()
+                        .filter(it -> it.getTargetMenu() != null && !it.getTargetMenu().isBlank())
+                        .peek(it -> {
+                            it.setTargetMenu(it.getTargetMenu().trim());
+                            if (it.getTitle() != null) it.setTitle(it.getTitle().trim());
+                            if (it.getDescription() != null) it.setDescription(it.getDescription().trim());
+                        })
+                        .filter(it -> allowed.contains(it.getTargetMenu()))
+                        .filter(it -> used.add(it.getTargetMenu()))
+                        .limit(3)
+                        .forEach(it -> list.add(Challenges.builder()
                                 .user(user)
                                 .title(nvl(it.getTitle(), it.getTargetMenu() + " 먹기"))
-                                .targetMenuName(nvl(it.getTargetMenu(), "사과"))
+                                .targetMenuName(it.getTargetMenu())
                                 .description(nvl(it.getDescription(), "가볍게 도전!"))
                                 .startDate(weekStart)
                                 .endDate(weekEnd)
                                 .status(ChallengeStatus.PENDING)
-                                .build())
-                );
+                                .isAvoidType(false)
+                                .build()));
             }
 
-            while (list.size() < 3) {
-                String m = FALLBACK_MENUS.get(list.size());
+            // 모자라면 allowed에서 보충
+            var usedMenus = new java.util.HashSet<String>();
+            for (Challenges c : list) usedMenus.add(c.getTargetMenuName());
+            for (String m : allowed) {
+                if (list.size() >= 3) break;
+                if (m == null || m.isBlank() || usedMenus.contains(m)) continue;
                 list.add(Challenges.builder()
                         .user(user)
                         .title(m + " 먹기")
@@ -93,16 +126,34 @@ public class ChallengeGeneratorService {
                         .startDate(weekStart)
                         .endDate(weekEnd)
                         .status(ChallengeStatus.PENDING)
+                        .isAvoidType(false)
+                        .build());
+                usedMenus.add(m);
+            }
+
+            // 그래도 부족하면(allowed가 너무 짧을 때) 반복 채움
+            while (list.size() < 3) {
+                String m = allowed.get(list.size() % allowed.size());
+                list.add(Challenges.builder()
+                        .user(user)
+                        .title(m + " 먹기")
+                        .targetMenuName(m)
+                        .description("가볍게 도전!")
+                        .startDate(weekStart)
+                        .endDate(weekEnd)
+                        .status(ChallengeStatus.PENDING)
+                        .isAvoidType(false)
                         .build());
             }
+
             return list;
 
         } catch (Exception e) {
-            log.warn("LLM 생성 실패. fallback 사용: {}", e.toString());
-            List<Challenges> list = new ArrayList<>();
-            Collections.shuffle(FALLBACK_MENUS);
+            log.warn("LLM 생성 실패. 허용 목록으로 대체: {}", e.toString());
+            List<String> shuffled = new ArrayList<>(allowed);
+            Collections.shuffle(shuffled);
             for (int i = 0; i < 3; i++) {
-                String m = FALLBACK_MENUS.get(i);
+                String m = shuffled.get(i % shuffled.size());
                 list.add(Challenges.builder()
                         .user(user)
                         .title(m + " 먹기")
@@ -111,11 +162,13 @@ public class ChallengeGeneratorService {
                         .startDate(weekStart)
                         .endDate(weekEnd)
                         .status(ChallengeStatus.PENDING)
+                        .isAvoidType(false)
                         .build());
             }
             return list;
         }
     }
+
 
     private static String nvl(String s, String def) { return (s == null || s.isBlank()) ? def : s; }
 }

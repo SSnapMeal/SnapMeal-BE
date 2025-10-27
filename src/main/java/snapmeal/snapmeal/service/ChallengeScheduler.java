@@ -45,7 +45,7 @@ public class ChallengeScheduler {
 
         List<User> users = userRepository.findAll();
         for (User u : users) {
-            generatorService.generateWeeklyForUser(u, weekStart, weekEnd);
+            generatorService.generateWeeklyForUser(u, weekStart, weekEnd, false);
         }
     }
 }

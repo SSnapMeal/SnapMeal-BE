@@ -44,7 +44,7 @@ public class MealsController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.onSuccess(response));
     }
 
-    @GetMapping
+    @GetMapping("/date")
     @Operation(
             summary = "하루 식단 조회 API",
             description = "사용자의 하루 식단 목록을 조회합니다. " +
@@ -59,6 +59,33 @@ public class MealsController {
     ) {
         List<MealsResponseDto> response = mealsService.getMealsByDate(date);
         return ResponseEntity.ok(ApiResponse.onSuccess(response));
+    }
+
+    // 식단 기록 전체 조회
+    @GetMapping
+    @Operation(
+            summary = "내 식사기록 전체 조회",
+            description = "로그인 사용자의 모든 식사 기록을 최신순으로 반환합니다."
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "내 식사기록 조회 성공",
+            content = @Content(schema = @Schema(implementation = ApiResponse.class))
+    )
+    @ApiErrorCodeExamples({
+            ErrorCode.USER_NOT_FOUND
+    })
+    public ResponseEntity<ApiResponse<List<MealsResponseDto>>> listMyMeals(
+            @AuthenticationPrincipal User loginUser
+    ) {
+        // 서비스에서 엔티티 목록을 가져와 DTO로 변환
+        List<MealsResponseDto> result = mealsService
+                .getMyMeals(loginUser)
+                .stream()
+                .map(MealsResponseDto::from)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.onSuccess(result));
     }
 
 

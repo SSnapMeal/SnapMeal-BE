@@ -20,4 +20,10 @@ public interface ChallengeRepository extends JpaRepository<Challenges, Long> {
     Optional<Challenges> findByChallengeIdAndUser(Long challengeId, User user);
 
     boolean existsByUserAndStartDateGreaterThanEqualAndEndDateLessThanEqual(User user, LocalDate start, LocalDate end);
+    // ChallengeRepository
+    void deleteAllByUserAndStartDateGreaterThanEqualAndEndDateLessThanEqual(
+            User user, LocalDate start, LocalDate end
+    );
+
+    List<Challenges> findAllByUserOrderByStartDateDesc(User user);
 }
