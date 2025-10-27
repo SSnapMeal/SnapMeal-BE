@@ -9,6 +9,8 @@ import snapmeal.snapmeal.domain.Images;
 import snapmeal.snapmeal.domain.Meals;
 import snapmeal.snapmeal.domain.NutritionAnalysis;
 import snapmeal.snapmeal.domain.User;
+import snapmeal.snapmeal.global.GeneralException;
+import snapmeal.snapmeal.global.code.ErrorCode;
 import snapmeal.snapmeal.global.util.AuthService;
 import snapmeal.snapmeal.repository.MealsRepository;
 import snapmeal.snapmeal.repository.NutritionAnalysisRepository;
@@ -35,6 +37,7 @@ public class MealsService {
     private static final String RECOMMENDATION_CACHE_PREFIX = "todayRecommendation:";
     private static final String NUTRITION_CACHE_PREFIX = "todayNutrition:";
 
+    /*
     // 식단 저장
     @Transactional
     public MealsResponseDto createMeal(MealsRequestDto request) {
@@ -61,6 +64,45 @@ public class MealsService {
 
         return mealsConverter.toDto(saved);
     }
+     */
+    // MealsService.java
+
+    // 식단 저장 (영양분석/사진 "옵션")
+    // - request.getNutritionId()가 있으면: 기존처럼 영양분석 + 이미지 연동
+    // - request.getNutritionId()가 없으면: 사진/영양 없이 텍스트 기반 기록만 저장
+    @Transactional
+    public MealsResponseDto createMeal(MealsRequestDto request) {
+        User user = authService.getCurrentUser();
+
+        NutritionAnalysis nutrition = null;
+        Images image = null;
+
+        // 1) 영양분석이 있으면 그대로 연동 (사진도 함께 붙음)
+        if (request.getNutritionId() != null) {
+            nutrition = nutritionAnalysisRepository.findById(request.getNutritionId())
+                    .orElseThrow(() -> new IllegalArgumentException("영양 분석 정보가 없습니다."));
+            image = nutrition.getImage(); // 영양분석에서 이미지 참조
+        }
+
+        // 2) 사진/영양 없이도 저장 가능 (nutrition == null, image == null)
+        Meals meal = Meals.builder()
+                .mealType(request.getMealType())     // 필수
+                .memo(request.getMemo())             // 선택
+                .location(request.getLocation())     // 선택
+                .mealDate(LocalDateTime.now())       // 또는 request에 시간이 있으면 그 값 사용
+                .nutrition(nutrition)                // null 허용
+                .image(image)                        // null 허용
+                .user(user)
+                .build();
+
+        Meals saved = mealsRepository.save(meal);
+
+        // 캐시 무효화(오늘자 추천/영양요약 갱신을 위한)
+        clearTodayCache(user);
+
+        return mealsConverter.toDto(saved);
+    }
+
 
     // 사용자의 날짜별 식단 조회 (DTO 반환)
     public List<MealsResponseDto> getMealsByDate(LocalDate targetDate) {
@@ -73,6 +115,17 @@ public class MealsService {
         List<Meals> meals = mealsRepository.findAllByUserAndCreatedAtBetween(user, startOfDay, endOfDay);
 
         return mealsConverter.toDtoList(meals);
+    }
+
+    // 사용자의 식단 전체 조회
+    @Transactional(readOnly = true)
+    public List<Meals> getMyMeals(User loginUser) {
+        if (loginUser == null) {
+            // 전역 예외 핸들러에서 적절히 401/404로 변환되도록
+            throw new GeneralException(ErrorCode.USER_NOT_FOUND);
+        }
+        // 최신순 정렬 반환
+        return mealsRepository.findAllByUserOrderByMealDateDesc(loginUser);
     }
 
     // 사용자의 식단 개별 조회

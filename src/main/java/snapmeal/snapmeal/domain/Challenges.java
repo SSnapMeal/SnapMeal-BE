@@ -63,6 +63,13 @@ public class Challenges extends BaseEntity {
     @Column(name = "cancelled_at")
     private java.time.LocalDateTime cancelledAt;
 
+    // ✅ 회피형(예: “커피 안마시기”) 여부
+    // true  = 회피형(그날 해당 메뉴가 없어야 충족)
+    // false = 섭취형(그날 해당 메뉴가 있으면 충족)
+    @Column(name = "is_avoid_type", nullable = false)
+    @Builder.Default
+    private boolean isAvoidType = false;
+
     // ====== 도메인 메서드: 상태 전환 로직(서비스에서 재사용) ======
 
     /** 사용자가 "참여하기" 버튼을 눌렀을 때 호출 */
