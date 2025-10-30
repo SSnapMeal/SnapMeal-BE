@@ -65,11 +65,11 @@ spring:
       enabled: true
   data:
     redis:
-#      host: redis-container
-      host: localhost
+      host: redis-container
+#      host: localhost
       port: 6379
   # 사진 최대 업로드 크기 늘리기
   servlet:
     multipart:
-      max-file-size: 2MB
-      max-request-size: 2MB
+      max-file-size: 100MB
+      max-request-size: 100MB

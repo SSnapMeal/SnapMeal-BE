@@ -18,4 +18,10 @@ public class GeneralException extends RuntimeException {
     public ErrorResponseDto getErrorResponseHttpStatus() {
         return errorCode.getErrorResponseHttpStatus();
     }
+
+    // 상세 메시지를 받을 수 있는 생성자
+    public GeneralException(BaseErrorCode errorCode, String detailMessage) {
+        super(detailMessage);
+        this.errorCode = errorCode;
+    }
 }
