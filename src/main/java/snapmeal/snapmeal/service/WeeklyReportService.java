@@ -68,9 +68,10 @@ public class WeeklyReportService {
                 if (analyses.isEmpty()) continue;
 
                 // 총합 계산
-                float totalCal = 0, totalProtein = 0, totalFat = 0, totalCarb = 0;
+                float totalCal = 0, totalProtein = 0, totalSugar = 0, totalFat = 0, totalCarb = 0;
                 for (NutritionAnalysis na : analyses) {
                     totalCal += na.getCalories();
+                    totalSugar += na.getSugar();
                     totalProtein += na.getProtein();
                     totalFat += na.getFat();
                     totalCarb += na.getCarbs();
@@ -93,6 +94,7 @@ public class WeeklyReportService {
                         .reportDate(weekStart)
                         .totalCalories(totalCal)
                         .totalProtein(totalProtein)
+                        .totalSugar(totalSugar)
                         .totalFat(totalFat)
                         .totalCarbs(totalCarb)
                         .nutritionSummary(parsed.getNutritionSummary())

@@ -25,6 +25,9 @@ public class WeeklyReportResponseDto {
     @Schema(description = "총 섭취 단백질(g)", example = "480.2")
     private Float totalProtein;
 
+    @Schema(description = "총 섭취 당(g)", example = "490.2")
+    private Float totalSugar;
+
     @Schema(description = "총 섭취 지방(g)", example = "350.7")
     private Float totalFat;
 
