@@ -34,6 +34,7 @@ public class WeeklyReportConverter {
                     .totalCalories(report.getTotalCalories())
                     .totalProtein(report.getTotalProtein())
                     .totalFat(report.getTotalFat())
+                    .totalSugar(report.getTotalSugar())
                     .totalCarbs(report.getTotalCarbs())
                     .nutritionSummary(report.getNutritionSummary())
                     .caloriePattern(caloriePattern)
