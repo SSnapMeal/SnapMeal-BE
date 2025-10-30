@@ -35,7 +35,7 @@ public class WeeklyReports extends BaseEntity {
     private Float totalCarbs;
 
     @Column(name = "total_sugars")
-    private double totalSugar;
+    private Float totalSugar;
 
     @Column(name = "recommended_exercise")
     private String recommendedExercise;
