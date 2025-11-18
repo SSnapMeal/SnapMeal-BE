@@ -332,11 +332,11 @@ public class ChallengeService {
     public List<ChallengeDto.Response> listCurrentGeneratedChallenges() {
         User user = authService.getCurrentUser();
 
-        // ✅ 현재 사용자에게 생성된 모든 챌린지를 최신순으로 조회
+        // 현재 사용자에게 생성된 모든 챌린지를 최신순으로 조회
         List<Challenges> challenges = challengeRepository
                 .findAllByUserOrderByStartDateDesc(user);
 
-        // ✅ 가벼운 DTO로 변환 (스탬프 불필요)
+        // 가벼운 DTO로 변환 (스탬프 불필요)
         return challenges.stream()
                 .map(ChallengeConverter::toDto)
                 .toList();

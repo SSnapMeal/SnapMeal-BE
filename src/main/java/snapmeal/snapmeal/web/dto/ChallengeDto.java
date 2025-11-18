@@ -33,15 +33,15 @@ public class ChallengeDto {
         @Schema(example = "2025-09-07")
         private LocalDate endDate;
 
-        // ✅ 회피형 여부(엔티티 컬럼 도입 시 매핑)
+        // 회피형 여부(엔티티 컬럼 도입 시 매핑)
         @Schema(example = "true", description = "회피형 챌린지 여부 (예: 커피 안마시기)")
         private Boolean isAvoidType;
 
-        // ✅ 스탬프: 1일차~N일차, 각 날짜 충족 여부
+        // 스탬프: 1일차~N일차, 각 날짜 충족 여부
         @Schema(example = "[true,false,true,false,true,false,true]", description = "1일차~N일차 일별 충족 여부")
         private boolean[] stamps;
 
-        // ✅ 충족 일수 (UI 요약용)
+        // 충족 일수 (UI 요약용)
         @Schema(example = "4", description = "충족한 일수 합계")
         private int satisfiedDays;
 
@@ -85,7 +85,7 @@ public class ChallengeDto {
 
         /* ---------- 리뷰 DTO ---------- */
 
-        // ✅ 요청 DTO는 "입력"에만 쓰이므로 Response 내부 보관해도 되지만,
+        // 요청 DTO는 "입력"에만 쓰이므로 Response 내부 보관해도 되지만,
         // 나중에 분리하고 싶으면 ChallengeReviewRequestDto로 빼면 깔끔.
         @Getter @Setter @NoArgsConstructor @AllArgsConstructor
         public static class ReviewCreateOrUpdateRequest {
