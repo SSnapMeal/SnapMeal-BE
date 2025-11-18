@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.media.*;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import snapmeal.snapmeal.converter.ChallengeConverter;
 import snapmeal.snapmeal.global.util.AuthService;
 import snapmeal.snapmeal.service.ChallengeGeneratorService;
 import snapmeal.snapmeal.service.ChallengeService;
@@ -139,6 +139,10 @@ public class ChallengeController {
 
     // (테스트용) 이번 주 3개 생성 — 현재 로그인 사용자 기준
     @PostMapping("/weekly/generate")
+    @Operation(
+            summary = "챌린지 생성",
+            description = "한 주에 3개의 챌린지를 생성합니다."
+    )
     public List<ChallengeDto.Response> generateWeeklyForMe(@RequestParam(defaultValue = "false") boolean force) {
         var user = authService.getCurrentUser();
         LocalDate today = LocalDate.now();
@@ -152,5 +156,138 @@ public class ChallengeController {
         return created.stream()
                 .map(c -> challengeService.getDetail(c.getChallengeId(), user.getId()))
                 .toList();
+    }
+
+    /* ==========================
+     * 리뷰 API
+     * ========================== */
+
+    @Operation(
+            summary = "챌린지 리뷰 작성",
+            description = """
+            챌린지가 종료된 이후에만 별점(0~5점)과 텍스트 리뷰를 작성할 수 있습니다.
+            - rating: 0 ~ 5 사이 정수 (필수)
+            - content: 후기 내용 (선택)
+            """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "리뷰 작성 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ChallengeDto.Response.ReviewResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\n" +
+                                            "  \"reviewId\": 10,\n" +
+                                            "  \"challengeId\": 1,\n" +
+                                            "  \"rating\": 5,\n" +
+                                            "  \"content\": \"일주일 동안 커피 끊으니까 잠도 잘 오고 좋았어요!\",\n" +
+                                            "  \"createdAt\": \"2025-11-18T10:30:00\",\n" +
+                                            "  \"updatedAt\": \"2025-11-18T10:30:00\"\n" +
+                                            "}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "별점 범위(0~5) 위반 또는 잘못된 요청",
+                    content = @Content(mediaType = "application/json")
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "챌린지를 찾을 수 없음",
+                    content = @Content(mediaType = "application/json")
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "챌린지가 아직 종료되지 않아 리뷰 작성 불가",
+                    content = @Content(mediaType = "application/json")
+            )
+    })
+    @PostMapping("/{challengeId}/reviews")
+    public ChallengeDto.Response.ReviewResponse createReview(
+            @PathVariable Long challengeId,
+            @RequestBody ChallengeDto.Response.ReviewCreateOrUpdateRequest request
+    ) {
+        // Service의 createReview 그대로 호출
+        return challengeService.createReview(challengeId, request);
+    }
+    @Operation(
+            summary = "챌린지 리뷰 수정",
+            description = """
+            본인이 작성한 리뷰만 수정할 수 있습니다.
+            - rating: 0 ~ 5 사이 정수 (null 이면 수정하지 않음)
+            - content: 문자열 (null 이면 수정하지 않음)
+            둘 중 하나만 보내도 되고, 둘 다 보내도 됩니다.
+            """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "리뷰 수정 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ChallengeDto.Response.ReviewResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\n" +
+                                            "  \"reviewId\": 10,\n" +
+                                            "  \"challengeId\": 1,\n" +
+                                            "  \"rating\": 4,\n" +
+                                            "  \"content\": \"생각보다 힘들었지만 의미 있었어요.\",\n" +
+                                            "  \"createdAt\": \"2025-11-18T10:30:00\",\n" +
+                                            "  \"updatedAt\": \"2025-11-18T11:00:00\"\n" +
+                                            "}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "별점 범위(0~5) 위반",
+                    content = @Content(mediaType = "application/json")
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "본인이 작성한 리뷰가 아님",
+                    content = @Content(mediaType = "application/json")
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "리뷰를 찾을 수 없음",
+                    content = @Content(mediaType = "application/json")
+            )
+    })
+    @PatchMapping("/reviews/{reviewId}")
+    public ChallengeDto.Response.ReviewResponse updateReview(
+            @PathVariable Long reviewId,
+            @RequestBody ChallengeDto.Response.ReviewCreateOrUpdateRequest request
+    ) {
+        return challengeService.updateReview(reviewId, request);
+    }
+    @Operation(
+            summary = "챌린지 리뷰 삭제",
+            description = "본인이 작성한 리뷰만 삭제할 수 있습니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "리뷰 삭제 성공",
+                    content = @Content(mediaType = "application/json")
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "본인이 작성한 리뷰가 아님",
+                    content = @Content(mediaType = "application/json")
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "리뷰를 찾을 수 없음",
+                    content = @Content(mediaType = "application/json")
+            )
+    })
+    @DeleteMapping("/reviews/{reviewId}")
+    public ResponseEntity<Void> deleteReview(@PathVariable Long reviewId) {
+        challengeService.deleteReview(reviewId);
+        return ResponseEntity.noContent().build();
     }
 }
