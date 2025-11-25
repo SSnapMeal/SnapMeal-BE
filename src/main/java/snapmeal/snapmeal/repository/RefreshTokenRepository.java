@@ -17,21 +17,21 @@ public class RefreshTokenRepository {
         this.redisTemplate = redisTemplate;
     }
 
-//    // Refresh Token 저장 (TTL 포함)
-//    public void saveToken(Long userId, String refreshToken, long expirationTime) {
-//        String key = "refreshToken:" + userId;
-//        redisTemplate.opsForValue().set(key, refreshToken, expirationTime, TimeUnit.MILLISECONDS);
-//    }
-//
-//    // Refresh Token 가져오기
-//    public String getRefreshToken(Long userId) {
-//        return redisTemplate.opsForValue().get("refreshToken:" + userId);
-//    }
-//
-//    // Refresh Token 삭제
-//    public void deleteRefreshToken(Long userId) {
-//        redisTemplate.delete("refreshToken:" + userId);
-//    }
+
+    public String getRefreshToken(Long userId) {
+        String key = "refreshToken:" + userId;
+        return redisTemplate.opsForValue().get(key);
+    }
+
+    public void deleteTokenByUserId(Long userId) {
+        String key = "refreshToken:" + userId;
+        redisTemplate.delete(key);
+    }
+
+    public boolean existsByUserId(Long userId) {
+        String key = "refreshToken:" + userId;
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+    }
 
     public void saveToken(Long userId, String refreshToken, long expirationTime) {
         String key = "refreshToken:" + refreshToken; //
@@ -54,5 +54,21 @@ public class RefreshTokenRepository {
     public boolean existsByToken(String refreshToken) {
         String key = "refreshToken:" + refreshToken;
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+    }
+    public void deleteAllTokensByUserId(Long userId) {
+        String pattern = "refreshToken:*";
+        String target = String.valueOf(userId);
+
+        var keys = redisTemplate.keys(pattern);
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        for (String key : keys) {
+            String storedUserId = redisTemplate.opsForValue().get(key);
+            if (target.equals(storedUserId)) {
+                redisTemplate.delete(key);
+            }
+        }
     }
 }

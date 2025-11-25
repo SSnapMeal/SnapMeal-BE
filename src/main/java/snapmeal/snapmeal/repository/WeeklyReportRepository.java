@@ -12,4 +12,5 @@ public interface WeeklyReportRepository extends JpaRepository<WeeklyReports, Lon
 
     Optional<WeeklyReports> findTopByUserOrderByReportDateDesc(User user);
     Optional<WeeklyReports> findByUserAndReportDate(User user, LocalDate reportDate);
+    void deleteAllByUser(User user);
 }

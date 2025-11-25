@@ -23,6 +23,11 @@ public enum ErrorCode implements BaseErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH002", "사용자를 찾을 수 없습니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "AUTH003", "이미 가입된 이메일입니다."),
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "AUTH004", "접근 권한이 없습니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH005", "유효하지 않은 토큰입니다."),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTH_006", "토큰이 만료되었습니다."),
+    REFRESH_TOKEN_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_007", "리프레시 토큰 삭제에 실패했습니다."),
+    TOKEN_BLACKLIST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_008", "토큰 블랙리스트 등록에 실패했습니다."),
+
     //친구 관련 응답
     ALREADY_SENT_REQUEST(HttpStatus.CONFLICT,"MATE001","이미 보낸 요청입니다."),
     FRIEND_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "MATE002", "친구 요청을 찾을 수 없습니다."),

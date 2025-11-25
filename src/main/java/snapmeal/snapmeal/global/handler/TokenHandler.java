@@ -2,8 +2,8 @@ package snapmeal.snapmeal.global.handler;
 
 import snapmeal.snapmeal.global.code.BaseErrorCode;
 
-public class UserHandler extends GeneralException {
-    public UserHandler(BaseErrorCode errorCode) {
+public class TokenHandler extends GeneralException {
+    public TokenHandler(BaseErrorCode errorCode) {
         super(errorCode);
     }
 }

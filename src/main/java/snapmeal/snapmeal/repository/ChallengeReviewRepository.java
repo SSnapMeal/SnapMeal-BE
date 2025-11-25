@@ -10,4 +10,6 @@ import java.util.List;
 public interface ChallengeReviewRepository extends JpaRepository<ChallengeReviews, Long> {
     List<ChallengeReviews> findAllByChallenge(Challenges challenge);
     List<ChallengeReviews> findAllByUser(User user);
+    void deleteAllByUser(User user);
+    void deleteAllByChallenge(Challenges challenge);
 }

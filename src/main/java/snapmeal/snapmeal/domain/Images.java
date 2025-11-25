@@ -22,6 +22,8 @@ public class Images extends BaseEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
+    private String fileName;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;

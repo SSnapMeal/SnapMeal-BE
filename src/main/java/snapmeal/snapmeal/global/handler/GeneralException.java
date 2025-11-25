@@ -1,6 +1,5 @@
-package snapmeal.snapmeal.global;
+package snapmeal.snapmeal.global.handler;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import snapmeal.snapmeal.global.code.BaseErrorCode;

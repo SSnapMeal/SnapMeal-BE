@@ -9,7 +9,7 @@ import snapmeal.snapmeal.domain.Images;
 import snapmeal.snapmeal.domain.Meals;
 import snapmeal.snapmeal.domain.NutritionAnalysis;
 import snapmeal.snapmeal.domain.User;
-import snapmeal.snapmeal.global.GeneralException;
+import snapmeal.snapmeal.global.handler.GeneralException;
 import snapmeal.snapmeal.global.code.ErrorCode;
 import snapmeal.snapmeal.global.util.AuthService;
 import snapmeal.snapmeal.repository.MealsRepository;
