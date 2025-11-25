@@ -90,16 +90,22 @@ public class Challenges extends BaseEntity {
         this.cancelledAt = java.time.LocalDateTime.now();
     }
 
-    /** 자정 배치에서 성공 판정 시 호출 */
+    // 자정 배치에서 성공 판정 시 호출
     public void success(java.time.LocalDateTime when) {
         this.status = ChallengeStatus.SUCCESS;
         this.completedAt = when;
     }
 
-    /** 기간 종료 시 실패로 마감 */
+    // 기간 종료 시 실패로 마감
     public void fail() {
         if (this.status == ChallengeStatus.PENDING || this.status == ChallengeStatus.IN_PROGRESS) {
             this.status = ChallengeStatus.FAIL;
         }
+    }
+
+    @Enumerated(EnumType.STRING)
+    // 기간 종료 시, 참여하지 않은 챌린지 처리
+    public void markNotParticipated() {
+        this.status = ChallengeStatus.NOT_PARTICIPATED;
     }
 }

@@ -1,6 +1,7 @@
 package snapmeal.snapmeal.converter;
 
 import org.springframework.stereotype.Component;
+import snapmeal.snapmeal.domain.ChallengeReviews;
 import snapmeal.snapmeal.domain.Challenges;
 import snapmeal.snapmeal.domain.enums.ChallengeStatus;
 import snapmeal.snapmeal.web.dto.ChallengeDto;
@@ -47,7 +48,7 @@ public class ChallengeConverter {
                 .status(c.getStatus().name())
                 .startDate(c.getStartDate())
                 .endDate(c.getEndDate())
-                // ✅ 회피형 여부
+                // 회피형 여부
                 .isAvoidType(c.isAvoidType())
                 // 소개 섹션: 엔티티에 전용 칼럼이 없으면 규칙/상수로 보강
                 .introduction(ChallengeDto.Response.Introduction.builder()
@@ -126,5 +127,4 @@ public class ChallengeConverter {
             return String.format("기간(%d일) 동안 \"%s\" 기록 1일 이상 시 성공", days, c.getTargetMenuName());
         }
     }
-
 }

@@ -5,5 +5,6 @@ public enum ChallengeStatus {
         IN_PROGRESS,   // 사용자가 참여 버튼을 눌러 도전 중
         SUCCESS,       // 성공(자정 배치가 식사기록을 보고 성공으로 판정)
         FAIL,          // 기간 끝났는데 성공 못함
-        CANCELLED      // 사용자가 포기하기 버튼을 눌러 취소
+        CANCELLED,     // 사용자가 포기하기 버튼을 눌러 취소
+        NOT_PARTICIPATED // 기간 끝날 때까지 아예 참여 안 함
 }

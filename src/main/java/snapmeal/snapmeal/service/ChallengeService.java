@@ -146,7 +146,7 @@ public class ChallengeService {
         return result;
     }
     /**
-     * ✅ [추가] 참여 전, 내 계정에 "생성되어 있는" 전체 챌린지 조회 (라이트)
+     * 참여 전, 내 계정에 "생성되어 있는" 전체 챌린지 조회
      * - 정의: 보통 PENDING(후보) 상태 = 아직 참여/포기/성공/실패 결정 전
      * - 정렬: 시작일 최신순 (최근에 생성된 후보가 위로 오도록)
      * - 반환: 목록 화면용 경량 DTO (toDto)
@@ -227,22 +227,36 @@ public class ChallengeService {
     @Transactional
     public void evaluateDaily() {
         LocalDate today = LocalDate.now(KST);
-        List<Challenges> targets = challengeRepository.findAllByStatusInAndEndDateLessThanEqual(
-                List.of(ChallengeStatus.PENDING, ChallengeStatus.IN_PROGRESS),
-                today.minusDays(1)
-        );
+
+        // PENDING + IN_PROGRESS 중 어제까지 끝난 챌린지만 판정 대상
+        List<Challenges> targets = challengeRepository
+                .findAllByStatusInAndEndDateLessThanEqual(
+                        List.of(ChallengeStatus.PENDING, ChallengeStatus.IN_PROGRESS),
+                        today.minusDays(1)  // 어제까지 끝난 챌린지
+                );
 
         for (Challenges c : targets) {
+
+            // 끝날 때까지 참여 안 한 챌린지 -> NOT_PARTICIPATED
+            if (c.getStatus() == ChallengeStatus.PENDING) {
+                c.markNotParticipated();
+                continue;
+            }
+
+            // 여기 오면 무조건 IN_PROGRESS -> 성공/실패 판정
             boolean[] stamps = buildDailyStamps(c);
             int satisfied = 0;
             for (boolean s : stamps) if (s) satisfied++;
 
             boolean success = isAvoidType(c)
-                    ? (satisfied == stamps.length)  // 회피형: 전일 충족
-                    : (satisfied >= 1);             // 섭취형: 기본 1일 이상
+                    ? (satisfied == stamps.length)  // 회피형: 전부 만족했을 때만 성공
+                    : (satisfied >= 1);             // 섭취형: 1일이라도 만족하면 성공
 
-            if (success) c.success(LocalDateTime.now(KST));
-            else c.fail();
+            if (success) {
+                c.success(LocalDateTime.now(KST)); // SUCCESS + 종료시간 기록
+            } else {
+                c.fail(); // FAIL
+            }
         }
     }
 
@@ -266,6 +280,11 @@ public class ChallengeService {
         // 종료 후만 작성 가능
         if (!hasChallengeEnded(c)) {
             throw new IllegalStateException("챌린지 종료 후에만 리뷰를 작성할 수 있습니다.");
+        }
+        // 포기하거나 미참여 챌린지 리뷰 작성 불가능
+        if (c.getStatus() == ChallengeStatus.NOT_PARTICIPATED
+                || c.getStatus() == ChallengeStatus.CANCELLED) {
+            throw new IllegalStateException("참여 중이거나 완료된 챌린지만 리뷰를 작성할 수 있습니다.");
         }
 
         ChallengeReviews review = reviewRepository.save(
@@ -332,14 +351,81 @@ public class ChallengeService {
     public List<ChallengeDto.Response> listCurrentGeneratedChallenges() {
         User user = authService.getCurrentUser();
 
-        // ✅ 현재 사용자에게 생성된 모든 챌린지를 최신순으로 조회
+        // 현재 사용자에게 생성된 모든 챌린지를 최신순으로 조회
         List<Challenges> challenges = challengeRepository
                 .findAllByUserOrderByStartDateDesc(user);
 
-        // ✅ 가벼운 DTO로 변환 (스탬프 불필요)
+        // 가벼운 DTO로 변환 (스탬프 불필요)
         return challenges.stream()
                 .map(ChallengeConverter::toDto)
                 .toList();
     }
+    /**
+     * 특정 챌린지에 작성된 리뷰 단건 조회
+     *  - 챌린지 당 1개의 리뷰만 존재
+     *  - 없으면 null 혹은 예외 처리(필요에 따라 선택)
+     */
+    @Transactional(readOnly = true)
+    public ChallengeDto.Response.ReviewResponse getReview(Long challengeId) {
+        User user = authService.getCurrentUser();
 
+        // 챌린지가 내 소유인지 확인
+        Challenges challenge = challengeRepository
+                .findByChallengeIdAndUser(challengeId, user)
+                .orElseThrow(() -> new EntityNotFoundException("챌린지를 찾을 수 없습니다."));
+
+        // 리뷰 단건 조회
+        ChallengeReviews review = reviewRepository
+                .findByChallenge(challenge)
+                .orElse(null);  // 리뷰가 없을 때 -> null 반환
+
+        // DTO 변환 (null 처리 가능)
+        return (review != null) ? toReviewDto(review) : null;
+    }
+
+    // 내가 작성한 챌린지 리뷰 전체 조회
+    @Transactional(readOnly = true)
+    public List<ChallengeDto.Response.ReviewResponse> listMyReviews() {
+        User user = authService.getCurrentUser();
+
+        // 내가 쓴 리뷰들 최신순 조회
+        List<ChallengeReviews> reviews =
+                reviewRepository.findAllByUserOrderByCreatedAtDesc(user);
+
+        // DTO로 변환
+        return reviews.stream()
+                .map(this::toReviewDto)
+                .toList();
+    }
+
+    /**
+     * ⚠️ 테스트용 리뷰 생성 (기간/상태 제한 없이 강제 생성)
+     * 실제 운영에서는 사용 X
+     */
+    @Transactional
+    public ChallengeDto.Response.ReviewResponse createReviewForTest(
+            Long challengeId,
+            ChallengeDto.Response.ReviewCreateOrUpdateRequest req
+    ) {
+        // 0~5 허용
+        if (req.getRating() == null || req.getRating() < 0 || req.getRating() > 5) {
+            throw new IllegalArgumentException("별점은 0~5 범위여야 합니다.");
+        }
+
+        User user = authService.getCurrentUser();
+        Challenges c = challengeRepository.findByChallengeIdAndUser(challengeId, user)
+                .orElseThrow(() -> new EntityNotFoundException("챌린지를 찾을 수 없습니다."));
+
+        // 기간/상태 무시하고 리뷰 바로 저장 (테스트용)
+        ChallengeReviews review = reviewRepository.save(
+                ChallengeReviews.builder()
+                        .challenge(c)
+                        .user(user)
+                        .rating(req.getRating())
+                        .content(req.getContent())
+                        .build()
+        );
+
+        return toReviewDto(review);
+    }
 }
