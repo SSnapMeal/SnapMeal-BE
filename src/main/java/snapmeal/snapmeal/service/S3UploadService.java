@@ -1,22 +1,23 @@
 package snapmeal.snapmeal.service;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.amazonaws.services.s3.AmazonS3;
 import org.springframework.web.multipart.MultipartFile;
 import snapmeal.snapmeal.config.S3Configure;
 import snapmeal.snapmeal.domain.Images;
 import snapmeal.snapmeal.domain.User;
-import snapmeal.snapmeal.global.handler.GeneralException;
 import snapmeal.snapmeal.global.code.ErrorCode;
+import snapmeal.snapmeal.global.handler.GeneralException;
 import snapmeal.snapmeal.global.util.AuthService;
 import snapmeal.snapmeal.repository.ImageRepository;
 import snapmeal.snapmeal.web.dto.DetectionDto;
 import snapmeal.snapmeal.web.dto.PredictionResponseDto;
-
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -123,7 +124,7 @@ public class S3UploadService {
         }
 
         // key 최종 확인
-        if (key != null && !key.isBlank()) {
+        if (!key.isBlank()) {
             if (amazonS3.doesObjectExist(bucket, key)) {
                 amazonS3.deleteObject(bucket, key);
             }

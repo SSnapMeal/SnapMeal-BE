@@ -1,7 +1,7 @@
 package snapmeal.snapmeal.service;
 
-import snapmeal.snapmeal.web.dto.UserResponseDto;
 import snapmeal.snapmeal.web.dto.UserRequestDto;
+import snapmeal.snapmeal.web.dto.UserResponseDto;
 
 public interface UserCommandService {
     UserResponseDto.UserDto joinUser(UserRequestDto.JoinDto request);

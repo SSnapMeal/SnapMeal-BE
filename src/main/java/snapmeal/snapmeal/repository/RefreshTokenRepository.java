@@ -1,11 +1,9 @@
 package snapmeal.snapmeal.repository;
 
+import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.math.BigInteger;
-import java.util.concurrent.TimeUnit;
 
 @Repository
 public class RefreshTokenRepository {

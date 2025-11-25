@@ -1,9 +1,8 @@
 package snapmeal.snapmeal.service;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import jakarta.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -22,7 +21,6 @@ import snapmeal.snapmeal.global.handler.UserHandler;
 import snapmeal.snapmeal.repository.BlacklistRepository;
 import snapmeal.snapmeal.repository.ChallengeRepository;
 import snapmeal.snapmeal.repository.ChallengeReviewRepository;
-import snapmeal.snapmeal.repository.ImageRepository;
 import snapmeal.snapmeal.repository.MealsRepository;
 import snapmeal.snapmeal.repository.NutritionAnalysisRepository;
 import snapmeal.snapmeal.repository.RefreshTokenRepository;
@@ -32,7 +30,6 @@ import snapmeal.snapmeal.web.dto.DietTypeRequestDto;
 import snapmeal.snapmeal.web.dto.TokenServiceResponse;
 import snapmeal.snapmeal.web.dto.UserRequestDto;
 import snapmeal.snapmeal.web.dto.UserResponseDto;
-import java.util.Optional;
 
 
 @Slf4j

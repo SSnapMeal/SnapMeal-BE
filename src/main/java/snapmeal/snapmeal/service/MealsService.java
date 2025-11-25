@@ -1,5 +1,9 @@
 package snapmeal.snapmeal.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -9,8 +13,8 @@ import snapmeal.snapmeal.domain.Images;
 import snapmeal.snapmeal.domain.Meals;
 import snapmeal.snapmeal.domain.NutritionAnalysis;
 import snapmeal.snapmeal.domain.User;
-import snapmeal.snapmeal.global.handler.GeneralException;
 import snapmeal.snapmeal.global.code.ErrorCode;
+import snapmeal.snapmeal.global.handler.GeneralException;
 import snapmeal.snapmeal.global.util.AuthService;
 import snapmeal.snapmeal.repository.ChallengeRepository;
 import snapmeal.snapmeal.repository.ChallengeReviewRepository;
@@ -18,11 +22,6 @@ import snapmeal.snapmeal.repository.MealsRepository;
 import snapmeal.snapmeal.repository.NutritionAnalysisRepository;
 import snapmeal.snapmeal.web.dto.MealsRequestDto;
 import snapmeal.snapmeal.web.dto.MealsResponseDto;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
 
 
 
@@ -35,8 +34,6 @@ public class MealsService {
     private final AuthService authService;
     private final MealsConverter mealsConverter;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ChallengeRepository challengeRepository;
-    private final ChallengeReviewRepository challengeReviewRepository;
 
     private static final String RECOMMENDATION_CACHE_PREFIX = "todayRecommendation:";
     private static final String NUTRITION_CACHE_PREFIX = "todayNutrition:";

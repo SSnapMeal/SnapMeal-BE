@@ -1,8 +1,10 @@
 package snapmeal.snapmeal.global.code;
 
 
-import snapmeal.snapmeal.global.handler.GeneralException;
 import jakarta.validation.ConstraintViolationException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,11 +17,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import snapmeal.snapmeal.global.ApiResponse;
+import snapmeal.snapmeal.global.handler.GeneralException;
 import snapmeal.snapmeal.web.controller.UserController;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @RestControllerAdvice(annotations = {RestController.class}, basePackageClasses = {UserController.class})
