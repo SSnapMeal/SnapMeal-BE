@@ -1,6 +1,13 @@
 package snapmeal.snapmeal.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,14 +22,6 @@ import snapmeal.snapmeal.repository.ChallengeRepository;
 import snapmeal.snapmeal.repository.ChallengeReviewRepository;
 import snapmeal.snapmeal.repository.MealsRepository;
 import snapmeal.snapmeal.web.dto.ChallengeDto;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
 
 @Slf4j
 @Service

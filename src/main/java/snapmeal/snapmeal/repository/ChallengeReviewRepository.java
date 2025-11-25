@@ -13,4 +13,5 @@ public interface ChallengeReviewRepository extends JpaRepository<ChallengeReview
 
     // 내가 쓴 리뷰 전체, 최신순
     List<ChallengeReviews> findAllByUserOrderByCreatedAtDesc(User user);
+    void deleteAllByChallenge(Challenges challenge);
 }

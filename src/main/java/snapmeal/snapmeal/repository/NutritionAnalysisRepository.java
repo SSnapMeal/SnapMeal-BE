@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface NutritionAnalysisRepository extends JpaRepository<NutritionAnalysis, Long> {
     List<NutritionAnalysis> findAllByUserAndCreatedAtBetween(User user, LocalDateTime start, LocalDateTime end);
-
+    void deleteAllByUser(User user);
 }

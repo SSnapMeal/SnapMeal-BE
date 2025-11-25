@@ -1,13 +1,10 @@
 package snapmeal.snapmeal.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-import snapmeal.snapmeal.domain.Meals;
-import snapmeal.snapmeal.domain.User;
-import snapmeal.snapmeal.domain.enums.MealType;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import snapmeal.snapmeal.domain.Meals;
+import snapmeal.snapmeal.domain.User;
 
 public interface MealsRepository extends JpaRepository<Meals, Long> {
     List<Meals> findAllByUser(User user);
@@ -21,4 +18,5 @@ public interface MealsRepository extends JpaRepository<Meals, Long> {
     List<Meals> findAllByUserAndCreatedAtBetween(User user, LocalDateTime start, LocalDateTime end);
 
     List<Meals> findAllByUserOrderByMealDateDesc(User user);
+    void deleteAllByUser(User user);
 }

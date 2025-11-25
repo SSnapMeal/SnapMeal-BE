@@ -26,4 +26,8 @@ public interface ChallengeRepository extends JpaRepository<Challenges, Long> {
     );
 
     List<Challenges> findAllByUserOrderByStartDateDesc(User user);
+    void deleteAllByUser(User user);
+
+    List<Challenges> findAllByUser(User user);
+
 }

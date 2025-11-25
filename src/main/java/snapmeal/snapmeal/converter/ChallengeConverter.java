@@ -1,12 +1,10 @@
 package snapmeal.snapmeal.converter;
 
+import java.time.LocalDateTime;
 import org.springframework.stereotype.Component;
-import snapmeal.snapmeal.domain.ChallengeReviews;
 import snapmeal.snapmeal.domain.Challenges;
 import snapmeal.snapmeal.domain.enums.ChallengeStatus;
 import snapmeal.snapmeal.web.dto.ChallengeDto;
-
-import java.time.LocalDateTime;
 
 @Component
 public class ChallengeConverter {

@@ -1,25 +1,23 @@
 package snapmeal.snapmeal.service;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.amazonaws.services.s3.AmazonS3;
 import org.springframework.web.multipart.MultipartFile;
 import snapmeal.snapmeal.config.S3Configure;
 import snapmeal.snapmeal.domain.Images;
 import snapmeal.snapmeal.domain.User;
-import snapmeal.snapmeal.global.GeneralException;
 import snapmeal.snapmeal.global.code.ErrorCode;
+import snapmeal.snapmeal.global.handler.GeneralException;
 import snapmeal.snapmeal.global.util.AuthService;
 import snapmeal.snapmeal.repository.ImageRepository;
 import snapmeal.snapmeal.web.dto.DetectionDto;
 import snapmeal.snapmeal.web.dto.PredictionResponseDto;
-
-import java.util.*;
-
-import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +28,7 @@ public class S3UploadService {
     private final ImageRepository imagesRepository;
     private final FastApiProxyService fastApiProxyService;
     private final AuthService authService;
-    private final StringHttpMessageConverter stringHttpMessageConverter;
+
 
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024; // 이미지 최대 사이즈 2MB
 
@@ -53,8 +51,9 @@ public class S3UploadService {
             metadata.setContentType(file.getContentType());
 
             // S3에 업로드
+            String key = UUID.randomUUID() + "-" + file.getOriginalFilename();
             String bucket = s3Configure.getBucket();
-            amazonS3.putObject(bucket, fileName, file.getInputStream(), metadata);
+            amazonS3.putObject(bucket, key, file.getInputStream(), metadata);
 
             // 업로드된 파일 URL 얻기
             String fileUrl = amazonS3.getUrl(bucket, fileName).toString();
@@ -76,6 +75,7 @@ public class S3UploadService {
             }
 
             Images image = Images.builder()
+                    .fileName(key)
                     .imageUrl(fileUrl)
                     .user(user)
                     .classId(classId)
@@ -97,4 +97,43 @@ public class S3UploadService {
                     "이미지 업로드 또는 예측 중 오류가 발생했습니다.");
         }
     }
+
+    @Transactional
+    public void deleteAllImagesByUser(User user) {
+        List<Images> imagesList = imagesRepository.findAllByUser(user);
+
+        imagesList.forEach(this::deleteImageFromS3);
+
+        deleteImagesFromDatabase(user);
+    }
+
+    private void deleteImageFromS3(Images image) {
+        String bucket = s3Configure.getBucket();
+
+        // 신규 데이터: fileName 존재
+        String key = image.getFileName();
+
+        // 기존 데이터: fileName 없음 → URL에서 key 추출
+        if (key == null || key.isBlank()) {
+            String imageUrl = image.getImageUrl();
+            if (imageUrl == null || imageUrl.isBlank()) {
+                return;
+            }
+
+            key = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+        }
+
+        // key 최종 확인
+        if (!key.isBlank()) {
+            if (amazonS3.doesObjectExist(bucket, key)) {
+                amazonS3.deleteObject(bucket, key);
+            }
+        }
+    }
+
+    private void deleteImagesFromDatabase(User user) {
+        imagesRepository.deleteAllByUser(user);
+    }
+
+
 }
