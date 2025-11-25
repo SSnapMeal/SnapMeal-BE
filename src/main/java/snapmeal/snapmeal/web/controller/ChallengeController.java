@@ -28,7 +28,7 @@ public class ChallengeController {
     @Operation(summary = "내 챌린지 목록 조회")
     @GetMapping("/my")
     public List<ChallengeDto.Response> listMine(
-            @RequestParam(required = false, defaultValue = "IN_PROGRESS,SUCCESS,PENDING,FAIL") String statuses
+            @RequestParam(required = false, defaultValue = "IN_PROGRESS,SUCCESS,PENDING,FAIL,CANCELLED,NOT_PARTICIPATED") String statuses
     ) {
         // 서비스에서 stamps/satisfiedDays/introduction/participation까지 채워진 DTO 리턴
         return challengeService.listMineWithStamps(statuses);
@@ -205,7 +205,7 @@ public class ChallengeController {
                     content = @Content(mediaType = "application/json")
             )
     })
-    @PostMapping("/{challengeId}/reviews")
+    @PostMapping("/reviews/{challengeId}")
     public ChallengeDto.Response.ReviewResponse createReview(
             @PathVariable Long challengeId,
             @RequestBody ChallengeDto.Response.ReviewCreateOrUpdateRequest request
@@ -290,4 +290,35 @@ public class ChallengeController {
         challengeService.deleteReview(reviewId);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(summary = "챌린지 리뷰 조회(1개)")
+    @GetMapping("/reviews/{challengeId}")
+    public ChallengeDto.Response.ReviewResponse getReview(
+            @PathVariable Long challengeId
+    ) {
+        return challengeService.getReview(challengeId);
+    }
+
+    @Operation(
+            summary = "내가 작성한 챌린지 리뷰 전체 조회",
+            description = "로그인한 사용자가 작성한 모든 챌린지 리뷰를 최신순으로 조회합니다."
+    )
+    @GetMapping("/reviews/my")
+    public List<ChallengeDto.Response.ReviewResponse> listMyReviews() {
+        return challengeService.listMyReviews();
+    }
+
+    // 테스트 용 (데이터를 넣기 위함이므로, 테스트 후 삭제)
+    @Operation(
+            summary = "⚠️ 테스트용 챌린지 리뷰 작성 (기간/상태 무시)",
+            description = "기간이 끝나지 않아도 리뷰를 강제로 생성합니다. 실제 운영에서는 사용 X"
+    )
+    @PostMapping("/{challengeId}/reviews/test")
+    public ChallengeDto.Response.ReviewResponse createReviewForTest(
+            @PathVariable Long challengeId,
+            @RequestBody ChallengeDto.Response.ReviewCreateOrUpdateRequest req
+    ) {
+        return challengeService.createReviewForTest(challengeId, req);
+    }
+
 }
