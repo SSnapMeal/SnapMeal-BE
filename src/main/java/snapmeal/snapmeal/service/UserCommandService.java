@@ -13,5 +13,6 @@ public interface UserCommandService {
 
     void logout(String accessToken, String refreshToken);
     void deleteUser(String accessToken, String refreshToken);
+    UserResponseDto.UserDto getMyInfo(String accessToken);
 }
 

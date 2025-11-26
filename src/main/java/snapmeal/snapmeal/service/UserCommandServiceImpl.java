@@ -242,5 +242,20 @@ public class UserCommandServiceImpl implements UserCommandService {
             throw new GeneralException(ErrorCode.INVALID_TOKEN);
         }
     }
+
+    @Override
+    public UserResponseDto.UserDto getMyInfo(String accessToken) {
+        String token = accessToken.replace("Bearer ", "");
+
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            throw new UserHandler(ErrorCode.INVALID_TOKEN);
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserHandler(ErrorCode.USER_NOT_FOUND));
+
+        return UserResponseDto.UserDto.from(user);
+    }
 }
 
