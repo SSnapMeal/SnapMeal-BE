@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -237,6 +238,59 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/me")
+    @Operation(
+            summary = "내 정보 조회",
+            description = "Access Token 기반으로 현재 로그인한 사용자의 정보를 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponseDto.UserDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "유효하지 않은 토큰",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = """
+                                {
+                                  "isSuccess": false,
+                                  "code": "AUTH005",
+                                  "message": "유효하지 않은 토큰입니다.",
+                                  "status": 401
+                                }
+                                """))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "사용자를 찾을 수 없습니다",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = """
+                                {
+                                  "isSuccess": false,
+                                  "code": "AUTH002",
+                                  "message": "사용자를 찾을 수 없습니다.",
+                                  "status": 404
+                                }
+                                """))
+            )
+    })
+    @ApiErrorCodeExamples({
+            ErrorCode.INVALID_TOKEN,
+            ErrorCode.USER_NOT_FOUND
+    })
+    public ResponseEntity<UserResponseDto.UserDto> getMyInfo(
+            @RequestHeader("Authorization")
+            @Parameter(description = "Bearer Access Token", required = true)
+            String accessToken
+    ) {
+        UserResponseDto.UserDto response = userCommandService.getMyInfo(accessToken);
+        return ResponseEntity.ok(response);
+    }
 }
 
 
