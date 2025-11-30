@@ -1,4 +1,3 @@
-// src/main/java/snapmeal/snapmeal/service/OpenAiVisionService.java
 package snapmeal.snapmeal.service;
 
 import lombok.RequiredArgsConstructor;

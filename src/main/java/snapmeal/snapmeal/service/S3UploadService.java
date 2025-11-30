@@ -156,5 +156,51 @@ public class S3UploadService {
         imagesRepository.deleteAllByUser(user);
     }
 
+    @Transactional
+    public Images uploadAndSaveOnly(MultipartFile file) {
+        try {
+            // 파일 크기 체크
+            if (file.getSize() > MAX_FILE_SIZE) {
+                throw new GeneralException(ErrorCode.INVALID_INPUT_VALUE,
+                        "이미지 용량이 2MB를 초과했습니다. 최대 100MB까지 업로드 가능합니다.");
+            }
+
+            // 로그인 사용자
+            User user = authService.getCurrentUser();
+
+            // 파일명 생성
+            String key = UUID.randomUUID() + "-" + file.getOriginalFilename();
+            String bucket = s3Configure.getBucket();
+
+            // 메타데이터 생성
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(file.getSize());
+            metadata.setContentType(file.getContentType());
+
+            // S3 업로드
+            amazonS3.putObject(bucket, key, file.getInputStream(), metadata);
+
+            // 이미지 URL
+            String fileUrl = amazonS3.getUrl(bucket, key).toString();
+
+            // DB 저장
+            Images image = Images.builder()
+                    .fileName(key)
+                    .imageUrl(fileUrl)
+                    .user(user)
+                    // 예측 없이 기본값 지정
+                    .classId(-1)
+                    .className("Unknown")
+                    .build();
+
+            return imagesRepository.save(image);
+
+        } catch (GeneralException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new GeneralException(ErrorCode.INTERNAL_SERVER_ERROR,
+                    "이미지 업로드 중 오류가 발생했습니다.");
+        }
+    }
 
 }
