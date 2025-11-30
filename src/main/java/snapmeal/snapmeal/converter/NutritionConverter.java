@@ -3,20 +3,14 @@ package snapmeal.snapmeal.converter;
 import org.json.JSONArray;
 
 import org.json.JSONObject;
-import org.springframework.stereotype.Component;
 import snapmeal.snapmeal.web.dto.NutritionRequestDto;
-import snapmeal.snapmeal.web.dto.TodayNutritionResponseDto;
 
-import java.time.LocalDate;
-@Component
 public class NutritionConverter {
-
-    // 🔹 OpenAI JSON 응답 → TotalNutritionRequestDto 변환
-    public static NutritionRequestDto.TotalNutritionRequestDto fromOpenAiJson(String jsonResponse) {
+    public static NutritionRequestDto.TotalNutritionRequestDto fromOpenAiJson(String jsonResponse){
         JSONArray array = new JSONArray(jsonResponse);
 
         int totalCalories = 0;
-        double totalProtein = 0, totalCarbs = 0, totalSugar = 0, totalFat = 0;
+        double totalProtein = 0, totalCarbs = 0, totalSugar = 0, totalFat = 0, totalSodium = 0;
 
         for (int i = 0; i < array.length(); i++) {
             JSONObject food = array.getJSONObject(i);
@@ -25,12 +19,12 @@ public class NutritionConverter {
             totalCarbs += food.optDouble("carbs", 0);
             totalSugar += food.optDouble("sugar", 0);
             totalFat += food.optDouble("fat", 0);
+            totalSodium += food.optDouble("sodium", 0);
         }
 
         return new NutritionRequestDto.TotalNutritionRequestDto(
-                totalCalories, totalProtein, totalCarbs, totalSugar, totalFat, null
+                totalCalories, totalProtein, totalCarbs, totalSugar, totalFat, totalSodium, null
         );
     }
+
 }
-
-

@@ -34,6 +34,9 @@ public class TodayNutritionResponseDto {
     @Schema(description = "지방 요약 정보")
     private NutrientSummary fat;
 
+    @Schema(description = "나트륨 요약 정보")
+    private NutrientSummary sodium;
+
     @Getter
     @AllArgsConstructor
     @NoArgsConstructor

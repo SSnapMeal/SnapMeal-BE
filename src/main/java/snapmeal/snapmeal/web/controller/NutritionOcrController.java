@@ -29,7 +29,7 @@ public class NutritionOcrController {
             description = """
                     Swagger에서 이미지를 직접 업로드하면,
                     OpenAI Vision으로 영양성분표를 OCR + 분석해서
-                    칼로리/탄수화물/단백질/당류/지방을 반환합니다.
+                    칼로리/탄수화물/단백질/당류/지방/나트륨 을 반환합니다.
                     """
     )
     @ApiResponses(value = {
@@ -46,6 +46,7 @@ public class NutritionOcrController {
                                             "  \"carbs\": 60.0,\n" +
                                             "  \"sugar\": 10.0,\n" +
                                             "  \"fat\": 15.0,\n" +
+                                            "  \"sodium\": 35.0,\n" +
                                             "  \"nutritionId\": null\n" +
                                             "}"
                             )
