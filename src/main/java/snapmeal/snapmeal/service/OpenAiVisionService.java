@@ -22,10 +22,7 @@ public class OpenAiVisionService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    /**
-     * MultipartFile(업로드된 파일)로 요청
-     * - Swagger에서 file 업로드로 받은 이미지 처리용
-     */
+    // 영양성분표 사진 업로드하여 분석
     public String requestNutritionJsonFromFile(MultipartFile file) {
         try {
             byte[] bytes = file.getBytes();
@@ -36,7 +33,6 @@ public class OpenAiVisionService {
                 contentType = "image/jpeg";
             }
 
-            // Base64 인코딩
             String base64 = Base64.getEncoder().encodeToString(bytes);
 
             String dataUrl = "data:" + contentType + ";base64," + base64;
@@ -49,17 +45,13 @@ public class OpenAiVisionService {
         }
     }
 
-    /**
-     * 공통: imageUrl 또는 dataUrl을 받아 Vision 호출
-     */
+    // 공통: imageUrl 또는 dataUrl을 받아 Vision 호출
     private String callVisionWithImageUrl(String imageUrlOrDataUrl) {
 
-        // 1) HTTP 헤더
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
-        // 2) system 메시지
         Map<String, Object> systemMessage = new HashMap<>();
         systemMessage.put("role", "system");
         systemMessage.put("content",
@@ -73,7 +65,8 @@ public class OpenAiVisionService {
                   "protein": 숫자,
                   "carbs": 숫자,
                   "sugar": 숫자,
-                  "fat": 숫자
+                  "fat": 숫자,
+                  "sodium": 숫자
                 }
 
                 kcal, g, mg 등의 단위는 모두 제거하고 숫자만 사용해.
@@ -81,13 +74,12 @@ public class OpenAiVisionService {
                 """
         );
 
-        // 3) user 메시지: 텍스트 + 이미지
         Map<String, Object> userContentText = new HashMap<>();
         userContentText.put("type", "text");
         userContentText.put("text", "이 영양성분표 이미지를 분석해서 위에서 말한 JSON 형식으로만 응답해줘.");
 
         Map<String, Object> imageUrlObj = new HashMap<>();
-        imageUrlObj.put("url", imageUrlOrDataUrl); // 여기서 URL or data URL 모두 사용 가능
+        imageUrlObj.put("url", imageUrlOrDataUrl); // URL or data URL 모두 사용 가능
 
         Map<String, Object> userContentImage = new HashMap<>();
         userContentImage.put("type", "image_url");
@@ -101,7 +93,6 @@ public class OpenAiVisionService {
         userMessage.put("role", "user");
         userMessage.put("content", userContentList);
 
-        // 4) 전체 요청 바디
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", "gpt-4o-mini");
         requestBody.put("messages", List.of(systemMessage, userMessage));

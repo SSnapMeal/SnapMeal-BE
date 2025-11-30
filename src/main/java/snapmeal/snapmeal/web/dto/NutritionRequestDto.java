@@ -23,11 +23,12 @@ public class NutritionRequestDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class TotalNutritionRequestDto{
-        private int calories;
-        private double protein;
-        private double carbs;
-        private double sugar;
-        private double fat;
+        private Integer calories;
+        private Double protein;
+        private Double carbs;
+        private Double sugar;
+        private Double fat;
+        private Double sodium;
 
         private Long nutritionId;
     }

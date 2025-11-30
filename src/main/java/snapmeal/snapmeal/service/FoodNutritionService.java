@@ -59,6 +59,7 @@ public class FoodNutritionService {
                     .carbs(result.getCarbs())
                     .sugar(result.getSugar())
                     .fat(result.getFat())
+                    .sodium(result.getSodium())
                     .foodNames(String.join(", ", request.getFoodNames()))
                     .user(currentUser)
                     .build();
@@ -68,7 +69,7 @@ public class FoodNutritionService {
             return result;
 
         } catch (Exception e) {
-            return new NutritionRequestDto.TotalNutritionRequestDto(0, 0, 0, 0, 0, 0L);
+            return new NutritionRequestDto.TotalNutritionRequestDto(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0L);
         }
     }
     @Transactional(readOnly = true)
@@ -114,6 +115,7 @@ public class FoodNutritionService {
             - 탄수화물: %.1f g
             - 당: %.1f g
             - 지방: %.1f g
+            - 나트륨: %.1f g
 
             이 사용자의 성별/나이에 따른 권장 섭취량을 JSON 형식으로 알려주세요.
             반드시 JSON만 출력하세요. 설명, 문장, 주석은 포함하지 마세요.
@@ -123,11 +125,12 @@ public class FoodNutritionService {
               "protein": 120.0,
               "carbs": 300.0,
               "sugar": 50.0,
-              "fat": 65.0
+              "fat": 65.0,
+              "sodium": 75.0
             }
            """,
                     user.getGender().name(), user.getAge(),
-                    totalCalories, totalProtein, totalCarbs, totalSugar, totalFat
+                    totalCalories, totalProtein, totalCarbs, totalSugar, totalFat, totalSodium
             );
 
             String aiResponse = openAiClient.requestCompletion("당신은 영양학 전문가입니다.", prompt);
@@ -152,6 +155,7 @@ public class FoodNutritionService {
                     .carbs(buildNutrient(totalCarbs, recommendedCarbs))
                     .sugar(buildNutrient(totalSugar, recommendedSugar))
                     .fat(buildNutrient(totalFat, recommendedFat))
+                    .sodium(buildNutrient(totalSodium, recommendedSodium))
                     .build();
 
             nutritionRedisTemplate.opsForValue().set(todayKey, dto, Duration.ofDays(1));
