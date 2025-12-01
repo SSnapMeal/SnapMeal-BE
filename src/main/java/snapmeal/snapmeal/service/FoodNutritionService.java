@@ -104,6 +104,7 @@ public class FoodNutritionService {
             double totalCarbs   = analyses.stream().mapToDouble(NutritionAnalysis::getCarbs).sum();
             double totalSugar   = analyses.stream().mapToDouble(NutritionAnalysis::getSugar).sum();
             double totalFat     = analyses.stream().mapToDouble(NutritionAnalysis::getFat).sum();
+            double totalSodium  = analyses.stream().mapToDouble(NutritionAnalysis::getSodium).sum();
 
             // 권장량 AI 호출
             String prompt = String.format("""
@@ -147,6 +148,7 @@ public class FoodNutritionService {
             double recommendedCarbs    = json.optDouble("carbs", 300.0);
             double recommendedSugar    = json.optDouble("sugar", 50.0);
             double recommendedFat      = json.optDouble("fat", 65.0);
+            double recommendedSodium    = json.optDouble("sodium", 39.0);
 
             TodayNutritionResponseDto dto = TodayNutritionResponseDto.builder()
                     .date(today)
