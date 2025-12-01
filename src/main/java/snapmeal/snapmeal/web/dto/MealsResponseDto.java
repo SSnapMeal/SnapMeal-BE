@@ -2,11 +2,7 @@ package snapmeal.snapmeal.web.dto;
 
 import lombok.Builder;
 import lombok.Data;
-<<<<<<< Updated upstream
-=======
-import lombok.Getter;
 import snapmeal.snapmeal.domain.Images;
->>>>>>> Stashed changes
 import snapmeal.snapmeal.domain.Meals;
 import snapmeal.snapmeal.domain.NutritionAnalysis;
 import snapmeal.snapmeal.domain.enums.MealType;
