@@ -62,6 +62,7 @@ services:
       URL: "${URL}"
       USERNAME: "${USERNAME}"
       SERVER_PORT: 80
+      FOOD_API_KEY: "${FOOD_API_KEY}"
 
 #  certbot:
 #    image: certbot/certbot
