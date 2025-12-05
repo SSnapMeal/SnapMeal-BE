@@ -87,7 +87,8 @@ public class MealsService {
 
         // 2) 사진/영양 없이도 저장 가능 (nutrition == null, image == null)
         Meals meal = Meals.builder()
-                .mealType(request.getMealType())     // 필수
+                .mealType(request.getMealType())
+                .menu(request.getMenu())
                 .memo(request.getMemo())             // 선택
                 .location(request.getLocation())     // 선택
                 .mealDate(LocalDateTime.now())       // 또는 request에 시간이 있으면 그 값 사용
@@ -122,7 +123,6 @@ public class MealsService {
     @Transactional(readOnly = true)
     public List<Meals> getMyMeals(User loginUser) {
         if (loginUser == null) {
-            // 전역 예외 핸들러에서 적절히 401/404로 변환되도록
             throw new GeneralException(ErrorCode.USER_NOT_FOUND);
         }
         // 최신순 정렬 반환
@@ -148,7 +148,7 @@ public class MealsService {
         User user = authService.getCurrentUser();
         Meals meal = getMeal(mealId);
 
-        meal.update(requestDto.getMealType(), requestDto.getMemo(), requestDto.getLocation());
+        meal.update(requestDto.getMealType(), requestDto.getMemo(),requestDto.getMenu(), requestDto.getLocation());
 
         // 오늘 캐시 무효화
         clearTodayCache(user);
@@ -156,17 +156,20 @@ public class MealsService {
         return meal; // save() 필요 없음 (JPA 영속 상태 → 자동 반영)
     }
 
-    // 식단 삭제
     @Transactional
     public void deleteMeal(Long mealId) {
         User user = authService.getCurrentUser();
         Meals meal = getMeal(mealId);
 
+        if (meal.getNutrition() != null) {
+            nutritionAnalysisRepository.delete(meal.getNutrition());
+        }
+
         mealsRepository.delete(meal);
 
-        //  오늘 캐시 무효화
         clearTodayCache(user);
     }
+
 
     private void clearTodayCache(User user) {
         String today = LocalDate.now().toString();

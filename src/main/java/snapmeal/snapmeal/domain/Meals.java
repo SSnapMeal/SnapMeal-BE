@@ -26,6 +26,10 @@ public class Meals extends BaseEntity {
     private MealType mealType;
 
     private String memo;
+
+    @Column(name = "menu")
+    private String menu;
+
     private String location;
     private LocalDateTime mealDate;
 
@@ -41,12 +45,12 @@ public class Meals extends BaseEntity {
     @JoinColumn(name = "nutrition_id")
     private NutritionAnalysis nutrition;
 
-    public void update(MealType mealType, String memo, String location) {
+    public void update(MealType mealType, String memo, String menu, String location) {
         this.mealType = mealType;
         this.memo = memo;
+        this.menu= menu;
         this.location = location;
     }
 
-    @Column(name = "menu")
-    private String menu;
+
 }

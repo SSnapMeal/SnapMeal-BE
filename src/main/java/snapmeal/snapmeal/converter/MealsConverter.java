@@ -1,5 +1,7 @@
 package snapmeal.snapmeal.converter;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import snapmeal.snapmeal.domain.Meals;
 import snapmeal.snapmeal.domain.NutritionAnalysis;
@@ -26,18 +28,28 @@ public class MealsConverter {
         Double fat       = (nutrition != null) ? nutrition.getFat()      : 0.0;
         Double sodium    = (nutrition != null) ? nutrition.getSodium()   : 0.0;
 
-        // 이미지도 null 체크
-        String className = (image != null) ? image.getClassName() : null;
+        List<String> foodNames = null;
+
+        if (nutrition != null && nutrition.getFoodNames() != null) {
+
+            String raw = nutrition.getFoodNames();
+
+            if (!raw.equals("영양성분표 OCR 분석")) {
+                foodNames = Arrays.stream(raw.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isBlank())
+                        .collect(Collectors.toList());
+            }
+        }
         String imageUrl  = (image != null) ? image.getImageUrl()  : null;
 
-        // 👉 4) 이제 안전하게 DTO로 빌더 생성
         return MealsResponseDto.builder()
                 .mealId(meal.getMealId())
                 .mealType(meal.getMealType())
                 .memo(meal.getMemo())
                 .location(meal.getLocation())
                 .mealDate(meal.getMealDate())
-
+                .menu(meal.getMenu())
                 // 영양 정보 (없으면 null 로 내려감)
                 .calories(calories)
                 .protein(protein)
@@ -47,7 +59,7 @@ public class MealsConverter {
                 .sodium(sodium)
 
                 // 이미지 정보 (없으면 null)
-                .className(className)
+                .classNames(foodNames)
                 .imageUrl(imageUrl)
                 .build();
     }

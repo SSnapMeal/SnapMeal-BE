@@ -17,7 +17,10 @@ public class MealsRequestDto {
     private MealType mealType;       // 아침, 점심, 저녁, 간식 등
 
     @Schema(description = "메모 (예: '저녁 약속으로 먹음')", example = "저녁 약속으로 먹음")
-    private String memo;       // 자유 메모
+    private String memo;
+
+    @Schema(description = "메뉴 이름", example = "치킨")
+    private String menu;
 
     @Schema(description = "식사한 장소", example = "BHC")
     private String location;   // 장소 (ex: "집", "카페")
