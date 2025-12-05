@@ -102,7 +102,9 @@ public class TodayRecommendationService {
         List<NutritionAnalysis> todayRecords =
                 nutritionAnalysisRepository.findTodayRecords(user, LocalDate.now());
 
-        log.debug("[TodayRecommendation] 오늘 기록 개수: {}", todayRecords.size());
+        log.info("🔥 오늘 영양 데이터 개수: {}", todayRecords.size());
+        log.info("🔥 오늘 영양 calories 목록: {}",
+                todayRecords.stream().map(NutritionAnalysis::getCalories).toList());
 
         return todayRecords.stream()
                 .mapToInt(NutritionAnalysis::getCalories)
