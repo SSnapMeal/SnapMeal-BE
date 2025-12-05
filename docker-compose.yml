@@ -11,11 +11,14 @@ services:
     env_file:
       - .env
     environment:
+      TZ: Asia/Seoul
       JWT_SECRET: "${JWT_SECRET}"
       KAKAO_CLIENT_ID: "${Client_ID}"
       PASSWORD: "${PASSWORD}"
       URL: "${URL}"
       USERNAME: "${USERNAME}"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
 
     depends_on:
       - redis
@@ -40,6 +43,7 @@ services:
       - redis_data:/data
     environment:
       - REDIS_PORT=6379
+      - TZ=Asia/Seoul
     command: ["redis-server", "--appendonly", "yes"]
 
 
@@ -56,6 +60,7 @@ services:
     depends_on:
       - spring
     environment:
+      TZ: Asia/Seoul
       JWT_SECRET: "${JWT_SECRET}"
       KAKAO_CLIENT_ID: "${Client_ID}"
       PASSWORD: "${PASSWORD}"

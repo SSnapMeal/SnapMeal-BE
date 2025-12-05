@@ -98,11 +98,9 @@ public class TodayRecommendationService {
     }
 
     private int calculateTodayCalories(User user) {
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
 
         List<NutritionAnalysis> todayRecords =
-                nutritionAnalysisRepository.findAllByUserAndCreatedAtBetween(user, startOfDay, endOfDay);
+                nutritionAnalysisRepository.findTodayRecords(user, LocalDate.now());
 
         log.debug("[TodayRecommendation] 오늘 기록 개수: {}", todayRecords.size());
 
@@ -110,6 +108,7 @@ public class TodayRecommendationService {
                 .mapToInt(NutritionAnalysis::getCalories)
                 .sum();
     }
+
 
     private String extractJson(String response) {
         String trimmed = response.trim();
