@@ -1,5 +1,7 @@
 package snapmeal.snapmeal.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import snapmeal.snapmeal.domain.Images;
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MealsResponseDto {
     private Long mealId;
     private MealType mealType;
@@ -24,8 +27,8 @@ public class MealsResponseDto {
     private Double sugar;
     private Double fat;
     private Double sodium;
-
-    private String className;
+    private List<String> classNames;
+    private String menu;
     private String imageUrl;
 
     public static MealsResponseDto from(Meals meal) {
@@ -40,8 +43,11 @@ public class MealsResponseDto {
         Double fat       = (nutrition != null) ? nutrition.getFat()      : 0.0;
         Double sodium    = (nutrition != null) ? nutrition.getSodium()   : 0.0;
 
-        String className = (image != null) ? image.getClassName() : null;
-        String imageUrl  = (image != null) ? image.getImageUrl()  : null;
+//        List<String> classNames = (image != null && image.getClassName() != null)
+//                ? List.of(image.getClassName())
+//                : List.of();
+
+        String imageUrl = (image != null) ? image.getImageUrl() : null;
 
         return MealsResponseDto.builder()
                 .mealId(meal.getMealId())
@@ -55,8 +61,10 @@ public class MealsResponseDto {
                 .sugar(sugar)
                 .fat(fat)
                 .sodium(sodium)
-                .className(className)
+//                .classNames(classNames)
                 .imageUrl(imageUrl)
+                .menu(meal.getMenu())
                 .build();
     }
+
 }

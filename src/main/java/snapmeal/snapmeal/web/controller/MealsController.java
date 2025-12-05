@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import snapmeal.snapmeal.converter.MealsConverter;
 import snapmeal.snapmeal.domain.Meals;
 import snapmeal.snapmeal.domain.User;
 import snapmeal.snapmeal.global.ApiResponse;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 public class MealsController {
 
     private final MealsService mealsService;
+    private final MealsConverter mealsConverter;
 
     @PostMapping
     @Operation(summary = "식사 기록 생성", description = "사용자가 식사(음식, 시간, 장소, 메모 등)를 기록합니다.")
@@ -61,7 +63,6 @@ public class MealsController {
         return ResponseEntity.ok(ApiResponse.onSuccess(response));
     }
 
-    // 식단 기록 전체 조회
     @GetMapping
     @Operation(
             summary = "내 식사기록 전체 조회",
@@ -78,11 +79,10 @@ public class MealsController {
     public ResponseEntity<ApiResponse<List<MealsResponseDto>>> listMyMeals(
             @AuthenticationPrincipal User loginUser
     ) {
-        // 서비스에서 엔티티 목록을 가져와 DTO로 변환
         List<MealsResponseDto> result = mealsService
                 .getMyMeals(loginUser)
                 .stream()
-                .map(MealsResponseDto::from)
+                .map(mealsConverter::toDto)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(ApiResponse.onSuccess(result));
@@ -100,7 +100,9 @@ public class MealsController {
             ErrorCode.BAD_REQUEST
     })
     public ResponseEntity<ApiResponse<MealsResponseDto>> getMeal(@PathVariable Long mealId) {
-        MealsResponseDto meal = MealsResponseDto.from(mealsService.getMeal(mealId));
+
+        MealsResponseDto meal = mealsConverter.toDto(mealsService.getMeal(mealId)); // ✔ 변경
+
         return ResponseEntity.ok(ApiResponse.onSuccess(meal));
     }
 
