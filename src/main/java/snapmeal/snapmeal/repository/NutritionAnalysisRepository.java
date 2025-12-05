@@ -22,5 +22,4 @@ public interface NutritionAnalysisRepository extends JpaRepository<NutritionAnal
     List<NutritionAnalysis> findTodayRecords(@Param("user") User user,
                                              @Param("today") LocalDate today);
 
-
 }

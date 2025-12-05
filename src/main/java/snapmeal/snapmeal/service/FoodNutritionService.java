@@ -89,11 +89,9 @@ public class FoodNutritionService {
             }
 
             LocalDate today = LocalDate.now();
-            LocalDateTime startOfDay = today.atStartOfDay();
-            LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
 
             List<NutritionAnalysis> analyses =
-                    nutritionAnalysisRepository.findAllByUserAndCreatedAtBetween(user, startOfDay, endOfDay);
+                    nutritionAnalysisRepository.findTodayRecords(user,today);
 
             if (analyses.isEmpty()) {
                 throw new RecommendationHandler(ErrorCode.NUTRITION_DATA_NOT_FOUND);
