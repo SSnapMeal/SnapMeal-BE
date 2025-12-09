@@ -33,6 +33,7 @@ public class OpenAiConverter {
                 - carbs (실수, g)
                 - sugar (실수, g)
                 - fat (실수, g)
+                - sodium (실수, g)
                 
                 **반드시** JSON 배열 형식으로만 응답해야 해.
                 아래와 같은 형식을 따라야 해:
@@ -44,7 +45,8 @@ public class OpenAiConverter {
                     "protein": 12.5,
                     "carbs": 30,
                     "sugar": 4.5,
-                    "fat": 10
+                    "fat": 10,
+                    "sodium": 2,
                   }
                 ]
                 
